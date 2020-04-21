@@ -1,6 +1,6 @@
 import logging
 from flask import Flask, render_template
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room
 
 log = logging.getLogger(__name__)
 app = Flask(__name__,
@@ -16,14 +16,22 @@ def index():
     return render_template('index.html')
 
 
-# @app.route('/game/<game_code>')
-# def game(game_code):
-#     join_room(game_code)
-#     return render_template('index.html')
+@socketio.on('Register_Socket_Connection')
+def register_socket_client(data):
+    game_code = data['gameCode']
+    print(f'Registering Connection for game code: {game_code}')
+    join_room(game_code)
+
+
+@socketio.on('Create_Player')
+def create_player(player_name):
+    print(f'Player {player_name} joined the game.')
+    emit('Player_Joined', {'playerName': player_name}, broadcast=True)
+
 
 @socketio.on('connect')
 def test_connect():
-    emit('my response', {'data': 'Connected'}, broadcast=True)
+    print('Received New Socket Connection')
 
 
 if __name__ == '__main__':

@@ -1,6 +1,4 @@
 import React, { Component } from 'react';
-import { useHistory } from "react-router-dom";
-import socketIOClient from "socket.io-client";
 
 export default class Main extends Component {
 
