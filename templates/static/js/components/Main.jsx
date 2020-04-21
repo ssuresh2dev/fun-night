@@ -13,7 +13,10 @@ export default class Main extends Component {
 
     createGame() {
         var gameCode = this.createId();
-        this.props.history.push('/game/' + gameCode);
+        this.props.history.push({
+            pathname: '/game/' + gameCode,
+            search: '?host=True'
+        });
     }
 
     joinGame() {

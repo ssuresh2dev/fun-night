@@ -17,16 +17,25 @@ def index():
 
 
 @socketio.on('Register_Socket_Connection')
-def register_socket_client(data):
-    game_code = data['gameCode']
+def register_socket_client(game_code):
     print(f'Registering Connection for game code: {game_code}')
     join_room(game_code)
 
 
 @socketio.on('Create_Player')
-def create_player(player_name):
+def create_player(data):
+    player_name = data['playerName']
+    game_code = data['gameCode']
     print(f'Player {player_name} joined the game.')
-    emit('Player_Joined', {'playerName': player_name}, broadcast=True)
+    emit('Player_Joined', {'playerName': player_name}, room=game_code)
+
+
+@socketio.on('Update_Player_Set')
+def update_player_set(data):
+    players = data['players']
+    game_code = data['gameCode']
+    print(f'Host updated players to {players}')
+    emit('Host_Updated_Player_Set', players, room=game_code)
 
 
 @socketio.on('connect')
