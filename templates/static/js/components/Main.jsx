@@ -1,30 +1,36 @@
 import React, { Component } from 'react';
+import { useHistory } from "react-router-dom";
 import socketIOClient from "socket.io-client";
 
 export default class Main extends Component {
-    constructor() {
-        super();
-        this.state = {
-            endpoint: 'http://127.0.0.1:5000',
-            color: 'white'
+
+    createId() {
+        var result = '';
+        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        for (var i = 0; i < 4; i++) {
+            result += characters.charAt(Math.floor(Math.random() * 26));
         }
+        return result;
     }
 
-    send() {
-        const socket = socketIOClient(this.state.endpoint);
-        socket.emit('change color', this.state.color);
+    createGame() {
+        var gameCode = this.createId();
+        this.props.history.push('/game/' + gameCode);
     }
 
-    setColor(color) {
-        this.setState({ color });
+    joinGame() {
+        if (this.refs.existingGameCode !== null) {
+            var gameCode = this.refs.existingGameCode.value;
+            this.props.history.push('/game/' + gameCode);
+        }
     }
 
     render() {
        return (
            <div style={{ textAlign: "center" }}>
-               <button onClick={() => this.send() }>Change Color</button>
-               <button id="blue" onClick={() => this.setColor('blue')}>Blue</button>
-               <button id="red" onClick={() => this.setColor('red')}>Red</button>
+               <button onClick={() => this.createGame() }>New Game</button>
+               <input type="text" ref="existingGameCode" />
+               <button onClick={() => this.joinGame() }>Join Existing</button>
           </div>
        )
     }
