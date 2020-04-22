@@ -12,6 +12,7 @@
   "author": "Sameer Suresh",
   "license": "ISC",
   "devDependencies": {
+    "axios": "^0.19.2",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
     "babel-preset-es2015": "^6.24.1",
