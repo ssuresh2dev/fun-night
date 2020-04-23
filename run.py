@@ -69,6 +69,22 @@ def confirm_player(data):
     emit('Begin_Player_Turn', data, room=game_code)
 
 
+@socketio.on('Player_Turn_Finish')
+def player_turn_finish(data):
+    game_code = data['gameCode']
+    previous_turn = data['previousTurn']
+    roles_in_game = data['rolesInGame']
+    next_turn = api.get_next_turn_role(roles_in_game, previous_turn=previous_turn)
+    print(f'Next Turn: {next_turn}')
+    if next_turn:
+        data = {
+            'nextTurn': next_turn,
+        }
+        emit('Begin_Player_Turn', data, room=game_code)
+    else:
+        emit('Night_Finished', room=game_code)
+
+
 # @socketio.on('disconnect')
 # def handle_player_left():
 #     player_name = sid_name_mapping[flask.request.sid]

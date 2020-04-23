@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import '../../../public/css/main.css';
 
 export default class Main extends Component {
 
@@ -28,10 +29,15 @@ export default class Main extends Component {
 
     render() {
        return (
-           <div style={{ textAlign: "center" }}>
-               <button onClick={() => this.createGame() }>New Game</button>
-               <input type="text" ref="existingGameCode" />
-               <button onClick={() => this.joinGame() }>Join Existing</button>
+           <div className='main-container-night'>
+               <div className='centered-container'>
+                   <div className='console landing-page-console'>
+                       <input className='large-input' type="text" ref="existingGameCode" placeholder='Game Code'/>
+                       <button className='action-button' onClick={() => this.joinGame() }>Join Existing</button>
+                       <hr />
+                       <button className='action-button' onClick={() => this.createGame() }>New Game</button>
+                   </div>
+               </div>
           </div>
        )
     }

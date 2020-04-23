@@ -24,9 +24,9 @@ export default class PlayerInfo extends Component {
     render() {
         return (
             <div>
-                <label>Enter Your Name</label>
-                <input type="text" onChange={this.handleInputChange}/>
-                <button onClick={this.savePlayerInfo}>Save</button>
+                <label className='large-label'>Enter Your Name</label>
+                <input type="text" className='large-input' onChange={this.handleInputChange}/>
+                <button className='action-button' onClick={this.savePlayerInfo}>Save</button>
             </div>
         );
     }

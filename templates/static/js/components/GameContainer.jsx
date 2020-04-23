@@ -4,6 +4,12 @@ import socketIOClient from "socket.io-client";
 import PlayerInfo from "./PlayerInfo";
 import PlayerHuddle from "./PlayerHuddle";
 import constants from '../constants';
+import RoleDescription from "./RoleDescription";
+import RoleConfirmation from "./RoleConfirmation";
+import PlayerCircle from "./PlayerCircle";
+import RoleCard from "./RoleCard";
+import utils from "../utils";
+import PlayerActionConsole from "./PlayerActionConsole";
 
 export default class GameContainer extends Component {
 
@@ -30,6 +36,7 @@ export default class GameContainer extends Component {
         this.huddleFinished = this.huddleFinished.bind(this);
         this.addRoleToGame = this.addRoleToGame.bind(this);
         this.playerConfirmedRole = this.playerConfirmedRole.bind(this);
+        this.playerFinishedTurn = this.playerFinishedTurn.bind(this);
     }
 
     componentDidMount() {
@@ -102,6 +109,21 @@ export default class GameContainer extends Component {
         });
     }
 
+    removeRoleFromGame(role) {
+        let removed = false
+        let updatedRoles = [];
+        for (const r of this.state.rolesInGame.values()) {
+            if (r !== role || removed) {
+                updatedRoles = [...updatedRoles, r];
+            } else {
+                removed = true;
+            }
+        }
+        this.setState({
+            rolesInGame: updatedRoles
+        });
+    }
+
     huddleFinished() {
         this.socket.emit('Huddle_Finished', {
             gameCode: this.state.gameCode,
@@ -168,14 +190,25 @@ export default class GameContainer extends Component {
         })
     }
 
+    playerFinishedTurn() {
+        this.socket.emit('Player_Turn_Finish', {
+            gameCode: this.state.gameCode,
+            previousTurn: this.state.executingTurn,
+            rolesInGame: this.state.rolesInGame
+        });
+        return [false, 0];
+    }
+
     // Rendering Functions
 
     renderGetPlayerInfo() {
         if (this.state.gameState === 'createplayer') {
             return (
-                <div id='player-info'>
-                    <PlayerInfo
-                        onSave={this.savePlayerInfo}/>
+                <div className='centered-container'>
+                    <div className='console player-info-console'>
+                        <PlayerInfo
+                            onSave={this.savePlayerInfo}/>
+                    </div>
                 </div>
             );
         }
@@ -184,11 +217,11 @@ export default class GameContainer extends Component {
     renderPlayerHuddle() {
         if (this.state.gameState === 'huddle') {
             return (
-                <div id='player-huddle'>
+                <div className='half-container'>
                     <PlayerHuddle
-                        host={this.state.host}
                         players={this.state.allPlayers}
-                        onFinish={this.huddleFinished}/>
+                        host={this.state.host}
+                        onFinish={this.huddleFinished} />
                 </div>
             );
         }
@@ -196,75 +229,71 @@ export default class GameContainer extends Component {
 
     renderRoleChoices() {
         if (this.state.gameState === 'huddle') {
-            if (this.state.host) {
-                return (
-                    <div id='role-choices'>
-                        {constants.ALL_ROLES.map((role) =>
-                            <button onClick={() => this.addRoleToGame(role)}>{role}</button>)}
+            return (
+                <div className='half-container'>
+                    <div className='console role-display-console'>
+                        <div className='role-choices'>
+                            {constants.ALL_ROLES.map((role) =>
+                                <RoleDescription
+                                    host={this.state.host}
+                                    role={role}
+                                    onRoleAdd={() => this.addRoleToGame(role)}
+                                    onRoleRemove={() => this.removeRoleFromGame(role)}/>
+                            )}
+                        </div>
                     </div>
-                );
-            } else {
-                return (
-                    <div id='role-choices'>
-                        {constants.ALL_ROLES.map((role) => <label>{role}</label>)}
-                    </div>
-                );
-            }
-
+                </div>
+            );
         }
     }
 
     renderRoleConfirmation() {
         if (this.state.gameState === 'roleassignment') {
             const assignedRole = this.state.roleData['currentAssignments'][this.state.playerName];
-            if (!this.state.playerConfirmedRole) {
-                return (
-                    <div id='roleconfirmation'>
-                        <label>Your Assigned Role: {assignedRole}</label>
-                        <button onClick={this.playerConfirmedRole}>Confirm</button>
-                    </div>
-                );
-            } else {
-                return (
-                    <div id='roleconfirmation'>
-                        <label>Your Assigned Role: {assignedRole}</label>
-                        <label>Waiting for others to confirm...</label>
-                    </div>
-                );
-            }
+            return (
+                <div className='centered-container'>
+                    <RoleConfirmation
+                        role={assignedRole}
+                        onConfirm={this.playerConfirmedRole} />
+                </div>
+            );
 
         }
     }
 
-    renderPlayerTurn() {
+    renderPlayerActionConsole() {
         if (this.state.gameState === 'night') {
             const assignedRole = this.state.roleData['currentAssignments'][this.state.playerName];
-            if (this.state.executingTurn !== assignedRole) {
-                return (
-                    <div id='awaiting-turn'>
-                        <label>Current Turn: {this.state.executingTurn}</label>
-                    </div>
-                );
-            } else {
-                return (
-                    <div id='player-turn'>
-                        <label>Your Turn!</label>
-                    </div>
-                );
-            }
+            return (
+                <div className='half-container'>
+                    <PlayerActionConsole role={assignedRole} />
+                </div>
+            );
+        }
+    }
 
+    renderPlayerCircle() {
+        if (this.state.gameState === 'night') {
+            return (
+                <div className='half-container'>
+                    <PlayerCircle
+                        countdownTime={15}
+                        executingTurn={this.state.executingTurn}
+                        onFinish={this.playerFinishedTurn}/>
+                </div>
+            );
         }
     }
 
     render() {
         return (
-            <div id='fun-night-main-container' style={{ textAlign: "center" }}>
-                <h1>One Night</h1>
+            <div className='main-container-night'>
                 {this.renderGetPlayerInfo()}
                 {this.renderPlayerHuddle()}
                 {this.renderRoleChoices()}
                 {this.renderRoleConfirmation()}
-                {this.renderPlayerTurn()}
+                {this.renderPlayerCircle()}
+                {this.renderPlayerActionConsole()}
             </div>
         );
     }
