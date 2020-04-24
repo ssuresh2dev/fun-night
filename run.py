@@ -1,6 +1,7 @@
 import logging
 import flask
-from flask_socketio import SocketIO, emit, join_room, leave_room, rooms
+from flask_socketio import SocketIO, emit, join_room, leave_room
+import random
 
 from templates import app
 from templates.src import api
@@ -28,15 +29,19 @@ def create_player(data):
     game_code = data['gameCode']
     print(f'Player {player_name} joined the game.')
     emit('Player_Joined', {'playerName': player_name}, room=game_code)
-    # sid_name_mapping[flask.request.sid] = player_name
 
 
 @socketio.on('Update_Player_Set')
 def update_player_set(data):
     players = data['players']
     game_code = data['gameCode']
+    host_name = data['hostName']
     print(f'Host updated players to {players}')
-    emit('Host_Updated_Player_Set', players, room=game_code)
+    data = {
+        'allPlayers': players,
+        'hostName': host_name
+    }
+    emit('Host_Updated_Player_Set', data, room=game_code)
 
 
 @socketio.on('Huddle_Finished')
@@ -139,15 +144,31 @@ def vote_finished(data):
     game_code = data['gameCode']
     votes_for = data['votesFor']
     role_data = data['roleData']
-    winning_team, winners, player_killed = api.get_winning_team_and_players(votes_for, role_data)
+    winners, players_killed = api.get_winning_team_and_players(votes_for, role_data)
     data = {
-        'winningTeam': winning_team,
         'winners': winners,
-        'playerKilled': player_killed
+        'playersKilled': players_killed
     }
     print(data)
     print('Calculated Results')
     emit('Results_Calculated', data, room=game_code)
+
+
+@socketio.on('Player_Left')
+def player_left(data):
+    game_code = data['gameCode']
+    player_name = data['playerName']
+    all_players = data['allPlayers']
+    all_players.remove(player_name)
+    host = data['host']
+    data = {
+        'allPlayers': all_players
+    }
+    if host:
+        data['hostName'] = random.sample(all_players, 1)
+
+    emit('Host_Updated_Player_Set', data, room=game_code)
+    leave_room(game_code)
 
 
 # @socketio.on('disconnect')

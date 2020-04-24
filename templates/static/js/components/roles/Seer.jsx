@@ -38,10 +38,10 @@ export default class Seer extends Component {
         return (
             <div className='action-container'>
                 <label className='medium-label'>View any other player's role, or two center cards</label>
-                <button className='day-action-center-button' onClick={() => this.onCenterSelected()}>Center Cards</button>
-                <hr style='width: 60%;'/>
+                <button className='day-action-center-button' onClick={this.onCenterSelected}>Center Cards</button>
                 {otherPlayers.map((name) =>
-                    <button className='day-action-center-button' onClick={() => this.onPlayerSelected(name)}>{name}</button>)}
+                    <button className='day-action-center-button' onClick={() => this.onPlayerSelected(name)}>{name}</button>
+                )}
             </div>
         );
     }

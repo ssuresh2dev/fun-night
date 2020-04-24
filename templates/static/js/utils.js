@@ -44,10 +44,23 @@ const getPlayerFinalRole = (player, roleData) => {
     }
 };
 
+const getNeighbors = (player, roleData) => {
+    const ordering = roleData['ordering'];
+    const pIndex = ordering.indexOf(player);
+    if (pIndex === ordering.length - 1) {
+        return [ordering[0], ordering[ordering.length - 2]];
+    } else if (pIndex === 0) {
+        return [ordering[1], ordering[ordering.length - 1]];
+    } else {
+        return [ordering[pIndex - 1], ordering[pIndex + 1]];
+    }
+};
+
 export default {
     getImagePathForRole,
     getDescriptionForRole,
     getDisplayNameForRole,
     getPlayerOriginalRole,
-    getPlayerFinalRole
+    getPlayerFinalRole,
+    getNeighbors
 };

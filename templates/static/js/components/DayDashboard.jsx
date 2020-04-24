@@ -9,6 +9,7 @@ export default class DayDashboard extends Component {
             isReadyToVote: false
         };
         this.handleReadyToVote = this.handleReadyToVote.bind(this);
+        this.handleLeaveGame = this.handleLeaveGame.bind(this);
     }
 
     handleReadyToVote() {
@@ -16,6 +17,11 @@ export default class DayDashboard extends Component {
         this.setState({
             isReadyToVote: true
         })
+    }
+
+    handleLeaveGame() {
+        this.props.onLeaveGame();
+        window.location.href = '/';
     }
 
     render() {
@@ -29,7 +35,7 @@ export default class DayDashboard extends Component {
                 {this.props.rolesInGame.indexOf('Podcaster') > -1 ?
                     <button className='day-action-center-button'>Request Podcaster Vote</button> :
                     null}
-                <button className='day-action-center-button'>Leave Game</button>
+                <button className='day-action-center-button' onClick={this.handleLeaveGame}>Leave Game</button>
                 <div className='gap'>
                     <hr />
                 </div>

@@ -105,11 +105,41 @@ export default class PlayerActionConsole extends Component {
         }
     }
 
-    render() {
+    renderPlayerActionCenter() {
         const assignedRole = this.props.role;
         const executingTurn = this.props.executingTurn;
         const goldenWolf = this.props.roleData['goldenWolf'];
+        const boyNextdoorInGame = this.props.rolesInGame.indexOf('Boy Nextdoor') > -1;
         const renderAction = executingTurn === assignedRole || (executingTurn === 'Dog Whisperer' && goldenWolf === this.props.playerName);
+
+        if (renderAction) {
+            return (
+                <div className='player-action-center'>
+                    {this.getActionComponentForRole()}
+                </div>
+            );
+        } else if (boyNextdoorInGame) {
+            return (
+                <div className='player-action-center'>
+                    <label className='large-label'>Nothing to do yet!</label>
+                    <div className='gap'>
+                        <label className='medium-label'>Your Neighbors Are:</label>
+                        {utils.getNeighbors(this.props.playerName, this.props.roleData).map((name) =>
+                            <label className='large-label'>{name}</label>)}
+                    </div>
+                </div>
+            );
+        } else {
+            return (
+                <div className='player-action-center'>
+                    <label className='large-label'>Nothing to do yet!</label>
+                </div>
+            );
+        }
+    }
+
+    render() {
+        const assignedRole = this.props.role;
         return (
             <div className='console player-night-turn-console'>
                 <label className='large-label'>Your Assigned Role</label>
@@ -125,11 +155,7 @@ export default class PlayerActionConsole extends Component {
                 <div className='gap'>
                     <hr/>
                 </div>
-                <div className='player-action-center'>
-                    {renderAction ?
-                        this.getActionComponentForRole() :
-                        <label className='large-label'>Nothing to do yet!</label>}
-                </div>
+                {this.renderPlayerActionCenter()}
             </div>
         );
     }

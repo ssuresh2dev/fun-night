@@ -30,9 +30,8 @@ export default class GameContainer extends Component {
             playersReadyToVote: 0,
             votedPlayer: '',
             votesFor: [],
-            winningTeam: '',
             winners: [],
-            playerKilled: ''
+            playersKilled: []
         };
         this.socket = socketIOClient('http://' + document.domain + ':' + location.port);
         this.renderGetPlayerInfo = this.renderGetPlayerInfo.bind(this);
@@ -47,6 +46,8 @@ export default class GameContainer extends Component {
         this.onRoleSwitchTriggered = this.onRoleSwitchTriggered.bind(this);
         this.onWerewolfDesignated = this.onWerewolfDesignated.bind(this);
         this.onPlayerReadyToVote = this.onPlayerReadyToVote.bind(this);
+        this.onLeaveGame = this.onLeaveGame.bind(this);
+        this.dayFinished = this.dayFinished.bind(this);
     }
 
     componentDidMount() {
@@ -124,9 +125,8 @@ export default class GameContainer extends Component {
         this.socket.on('Results_Calculated', (data) => {
             this.setState({
                 gameState: 'end',
-                winningTeam: data['winningTeam'],
                 winners: data['winners'],
-                playerKilled: data['playerKilled']
+                playersKilled: data['playersKilled']
             });
         });
 
@@ -142,18 +142,8 @@ export default class GameContainer extends Component {
         const newPlayers = [...this.state.allPlayers, data['playerName']];
         this.socket.emit('Update_Player_Set', {
             players: newPlayers,
-            gameCode: this.state.gameCode
-        });
-        this.setState({
-            allPlayers: newPlayers
-        });
-    }
-
-    onPlayerLeft(data) {
-        const newPlayers = this.state.allPlayers.filter(p => p !== data['playerName']);
-        this.socket.emit('Update_Player_Set', {
-            players: newPlayers,
-            gameCode: this.state.gameCode
+            gameCode: this.state.gameCode,
+            hostName: this.state.playerName
         });
         this.setState({
             allPlayers: newPlayers
@@ -193,7 +183,8 @@ export default class GameContainer extends Component {
 
     onPlayerSetUpdated(data) {
         this.setState({
-            allPlayers: data
+            allPlayers: data['allPlayers'],
+            host: data['hostName'] === this.state.playerName
         });
     }
 
@@ -309,7 +300,21 @@ export default class GameContainer extends Component {
         this.setState({
             votedPlayer: player
         });
+    }
 
+    onLeaveGame() {
+        this.socket.emit('Player_Left', {
+            gameCode: this.state.gameCode,
+            playerName: this.state.playerName,
+            allPlayers: this.state.allPlayers,
+            host: this.state.host
+        })
+    }
+
+    dayFinished() {
+        this.setState({
+            gameState: 'vote'
+        })
     }
 
     // Rendering Functions
@@ -396,7 +401,8 @@ export default class GameContainer extends Component {
               <div className='half-container'>
                   <DayDashboard
                       rolesInGame={this.state.rolesInGame}
-                      onReadyToVote={this.onPlayerReadyToVote}/>
+                      onReadyToVote={this.onPlayerReadyToVote}
+                      onLeaveGame={this.onLeaveGame}/>
               </div>
             );
         }
@@ -418,7 +424,7 @@ export default class GameContainer extends Component {
                 <div className='half-container'>
                     <PlayerCircle
                         countdownTime={420}
-                        onFinish={this.playerFinishedTurn}
+                        onFinish={this.dayFinished}
                         gameState={'day'}/>
                 </div>
             );
@@ -449,9 +455,8 @@ export default class GameContainer extends Component {
             return (
                 <div className='centered-container'>
                     <EndDisplay
-                        winningTeam={this.state.winningTeam}
                         winners={this.state.winners}
-                        playerKilled={this.state.playerKilled}
+                        playersKilled={this.state.playersKilled}
                         playerName={this.state.playerName}
                         roleData={this.state.roleData}/>
                 </div>
