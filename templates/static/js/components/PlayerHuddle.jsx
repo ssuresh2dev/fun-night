@@ -22,9 +22,13 @@ export default class PlayerHuddle extends Component {
 
     renderStartButton() {
         if (this.props.host) {
-            return (
-                <button className='bottom-confirmation-button' onClick={this.props.onFinish}>Assign Roles</button>
-            );
+            if (this.props.players.length < 3) {
+                return <button className='disabled-bottom-confirmation-button' disabled={true}>Waiting for More Players...</button>
+            } else if (this.props.rolesInGame.length < this.props.players.length + 3) {
+                return <button className='disabled-bottom-confirmation-button' disabled={true}>Select More Roles...</button>
+            } else {
+                return <button className='bottom-confirmation-button' onClick={this.props.onFinish}>Assign Roles</button>;
+            }
         }
     }
 

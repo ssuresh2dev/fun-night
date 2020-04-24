@@ -4,12 +4,13 @@ import socketIOClient from "socket.io-client";
 import PlayerInfo from "./PlayerInfo";
 import PlayerHuddle from "./PlayerHuddle";
 import constants from '../constants';
+import utils from '../utils';
 import RoleDescription from "./RoleDescription";
 import RoleConfirmation from "./RoleConfirmation";
 import PlayerCircle from "./PlayerCircle";
-import RoleCard from "./RoleCard";
-import utils from "../utils";
 import PlayerActionConsole from "./PlayerActionConsole";
+import DayDashboard from "./DayDashboard";
+import EndDisplay from "./EndDisplay";
 
 export default class GameContainer extends Component {
 
@@ -25,7 +26,13 @@ export default class GameContainer extends Component {
             roleData: {},
             playerConfirmedRole: false,
             numPlayersConfirmed: 0,
-            executingTurn: ''
+            executingTurn: '',
+            playersReadyToVote: 0,
+            votedPlayer: '',
+            votesFor: [],
+            winningTeam: '',
+            winners: [],
+            playerKilled: ''
         };
         this.socket = socketIOClient('http://' + document.domain + ':' + location.port);
         this.renderGetPlayerInfo = this.renderGetPlayerInfo.bind(this);
@@ -37,6 +44,9 @@ export default class GameContainer extends Component {
         this.addRoleToGame = this.addRoleToGame.bind(this);
         this.playerConfirmedRole = this.playerConfirmedRole.bind(this);
         this.playerFinishedTurn = this.playerFinishedTurn.bind(this);
+        this.onRoleSwitchTriggered = this.onRoleSwitchTriggered.bind(this);
+        this.onWerewolfDesignated = this.onWerewolfDesignated.bind(this);
+        this.onPlayerReadyToVote = this.onPlayerReadyToVote.bind(this);
     }
 
     componentDidMount() {
@@ -71,6 +81,53 @@ export default class GameContainer extends Component {
 
         this.socket.on('Begin_Player_Turn', (data) => {
             this.onBeginPlayerTurn(data);
+        });
+
+        this.socket.on('Role_Assignments_Updated', (data) => {
+            this.onRoleAssignmentsUpdated(data);
+        });
+
+        this.socket.on('Night_Finished', () => {
+            this.onNightFinished();
+        });
+
+        this.socket.on('Ready_To_Vote_Count_Updated', () => {
+            const playersReadyToVote = this.state.playersReadyToVote + 1;
+            if (playersReadyToVote === this.state.allPlayers.length) {
+                this.setState({
+                    gameState: 'vote',
+                    playersReadyToVote: playersReadyToVote
+                });
+            } else {
+                this.setState({
+                    playersReadyToVote: playersReadyToVote
+                });
+            }
+        });
+
+        this.socket.on('Vote_Updated', (data) => {
+            const votesFor = [...this.state.votesFor, data['voteFor']];
+            if (votesFor.length === this.state.allPlayers.length) {
+                if (this.state.host) {
+                    this.socket.emit('Vote_Finished', {
+                        gameCode: this.state.gameCode,
+                        votesFor: votesFor,
+                        roleData: this.state.roleData,
+                    });
+                }
+            }
+            this.setState({
+                votesFor: votesFor
+            });
+        });
+
+        this.socket.on('Results_Calculated', (data) => {
+            this.setState({
+                gameState: 'end',
+                winningTeam: data['winningTeam'],
+                winners: data['winners'],
+                playerKilled: data['playerKilled']
+            });
         });
 
         this.setState({
@@ -142,8 +199,15 @@ export default class GameContainer extends Component {
 
     onRoleAssignmentCompleted(data) {
         this.setState({
-            roleData: data,
+            roleData: data['roleData'],
+            rolesInGame: data['rolesInGame'],
             gameState: 'roleassignment'
+        });
+    }
+
+    onRoleAssignmentsUpdated(data) {
+        this.setState({
+            roleData: data['roleData']
         });
     }
 
@@ -167,6 +231,12 @@ export default class GameContainer extends Component {
             executingTurn: data['nextTurn'],
             gameState: 'night'
         });
+    }
+
+    onNightFinished() {
+        this.setState({
+            gameState: 'day'
+        })
     }
 
     savePlayerInfo(playerName) {
@@ -199,6 +269,49 @@ export default class GameContainer extends Component {
         return [false, 0];
     }
 
+    onRoleSwitchTriggered(player1, player2, executingRole) {
+        this.socket.emit('Role_Switch', {
+            gameCode: this.state.gameCode,
+            sourcePlayer: player1,
+            targetPlayer: player2,
+            roleData: this.state.roleData,
+            executingRole: executingRole
+        })
+    }
+
+    onWerewolfDesignated(player) {
+        this.socket.emit('Werewolf_Designated', {
+            gameCode: this.state.gameCode,
+            player: player,
+            roleData: this.state.roleData
+        });
+    }
+
+    onPlayerReadyToVote() {
+        this.socket.emit('Player_Ready_To_Vote', {
+            gameCode: this.state.gameCode,
+            player: this.state.playerName,
+        });
+    }
+
+    onPlayerRequestedPodcasterVote() {
+        this.socket.emit('Player_Requested_Podcaster_Vote', {
+            gameCode: this.state.gameCode,
+            player: this.state.playerName,
+        });
+    }
+
+    castVote(player) {
+        this.socket.emit('Player_Voted', {
+            gameCode: this.state.gameCode,
+            player: player
+        });
+        this.setState({
+            votedPlayer: player
+        });
+
+    }
+
     // Rendering Functions
 
     renderGetPlayerInfo() {
@@ -221,7 +334,8 @@ export default class GameContainer extends Component {
                     <PlayerHuddle
                         players={this.state.allPlayers}
                         host={this.state.host}
-                        onFinish={this.huddleFinished} />
+                        onFinish={this.huddleFinished}
+                        rolesInGame={this.state.rolesInGame}/>
                 </div>
             );
         }
@@ -238,7 +352,8 @@ export default class GameContainer extends Component {
                                     host={this.state.host}
                                     role={role}
                                     onRoleAdd={() => this.addRoleToGame(role)}
-                                    onRoleRemove={() => this.removeRoleFromGame(role)}/>
+                                    onRoleRemove={() => this.removeRoleFromGame(role)}
+                                    capacityFilled={this.state.rolesInGame.length === this.state.allPlayers.length + 3}/>
                             )}
                         </div>
                     </div>
@@ -257,17 +372,32 @@ export default class GameContainer extends Component {
                         onConfirm={this.playerConfirmedRole} />
                 </div>
             );
-
         }
     }
 
     renderPlayerActionConsole() {
         if (this.state.gameState === 'night') {
-            const assignedRole = this.state.roleData['currentAssignments'][this.state.playerName];
+            const assignedRole = utils.getPlayerOriginalRole(this.state.playerName, this.state.roleData);
             return (
                 <div className='half-container'>
-                    <PlayerActionConsole role={assignedRole} />
+                    <PlayerActionConsole
+                        role={assignedRole}
+                        executingTurn={this.state.executingTurn}
+                        allPlayers={this.state.allPlayers}
+                        roleData={this.state.roleData}
+                        rolesInGame={this.state.rolesInGame}
+                        onRoleSwitch={this.onRoleSwitchTriggered}
+                        onWerewolfDesignated={this.onWerewolfDesignated}
+                        playerName={this.state.playerName}/>
                 </div>
+            );
+        } else if (this.state.gameState === 'day') {
+            return (
+              <div className='half-container'>
+                  <DayDashboard
+                      rolesInGame={this.state.rolesInGame}
+                      onReadyToVote={this.onPlayerReadyToVote}/>
+              </div>
             );
         }
     }
@@ -279,7 +409,51 @@ export default class GameContainer extends Component {
                     <PlayerCircle
                         countdownTime={15}
                         executingTurn={this.state.executingTurn}
-                        onFinish={this.playerFinishedTurn}/>
+                        onFinish={this.playerFinishedTurn}
+                        gameState={'night'}/>
+                </div>
+            );
+        } else if (this.state.gameState === 'day') {
+            return (
+                <div className='half-container'>
+                    <PlayerCircle
+                        countdownTime={420}
+                        onFinish={this.playerFinishedTurn}
+                        gameState={'day'}/>
+                </div>
+            );
+        }
+    }
+
+    renderVote() {
+        if (this.state.gameState === 'vote') {
+            return (
+                <div className='centered-container'>
+                    <div className='console vote-console'>
+                        <label className='large-label'>Choose who to kill:</label>
+                        {this.state.allPlayers.map((player) => this.state.votedPlayer === '' ?
+                            <button className='day-action-center-button' onClick={() => this.castVote(player)}>
+                                {player}
+                            </button> :
+                            <button className={this.state.votedPlayer === player ? 'day-action-center-button-selected' : 'day-action-center-button'} disabled={true}>
+                                {player}
+                            </button>)}
+                    </div>
+                </div>
+            );
+        }
+    }
+
+    renderEnd() {
+        if (this.state.gameState === 'end') {
+            return (
+                <div className='centered-container'>
+                    <EndDisplay
+                        winningTeam={this.state.winningTeam}
+                        winners={this.state.winners}
+                        playerKilled={this.state.playerKilled}
+                        playerName={this.state.playerName}
+                        roleData={this.state.roleData}/>
                 </div>
             );
         }
@@ -294,6 +468,8 @@ export default class GameContainer extends Component {
                 {this.renderRoleConfirmation()}
                 {this.renderPlayerCircle()}
                 {this.renderPlayerActionConsole()}
+                {this.renderVote()}
+                {this.renderEnd()}
             </div>
         );
     }

@@ -46,7 +46,12 @@ def assign_roles(data):
     roles_in_game = data['rolesInGame']
     print(f'Beginning role assignment for game {game_code}')
     role_data = api.create_initial_role_assignments(players, roles_in_game)
-    emit('Assigned_Roles', role_data, room=game_code)
+    data = {
+        'roleData': role_data,
+        'rolesInGame': roles_in_game
+    }
+    print(data)
+    emit('Assigned_Roles', data, room=game_code)
 
 
 @socketio.on('Confirm_Player')
@@ -83,6 +88,66 @@ def player_turn_finish(data):
         emit('Begin_Player_Turn', data, room=game_code)
     else:
         emit('Night_Finished', room=game_code)
+
+
+@socketio.on('Werewolf_Designated')
+def werewolf_designated(data):
+    game_code = data['gameCode']
+    player = data['player']
+    role_data = data['roleData']
+    role_data['goldenWolf'] = player
+    data = {
+        'roleData': role_data,
+    }
+    emit('Role_Assignments_Updated', data, room=game_code)
+
+
+@socketio.on('Role_Switch')
+def switch_roles(data):
+    game_code = data['gameCode']
+    source = data['sourcePlayer']
+    target = data['targetPlayer']
+    role_data = data['roleData']
+    executing_role = data['executingRole']
+    data = {
+        'roleData': api.switch_roles(source, target, executing_role, role_data)
+    }
+    emit('Role_Assignments_Updated', data, room=game_code)
+
+
+@socketio.on('Player_Ready_To_Vote')
+def ready_to_vote(data):
+    game_code = data['gameCode']
+    player_name = data['player']
+    print(f'Player {player_name} ready to vote')
+    emit('Ready_To_Vote_Count_Updated', room=game_code)
+
+
+@socketio.on('Player_Voted')
+def player_voted(data):
+    game_code = data['gameCode']
+    player_name = data['player']
+    print(f'Received vote for Player {player_name}')
+    data = {
+        'voteFor': player_name
+    }
+    emit('Vote_Updated', data, room=game_code)
+
+
+@socketio.on('Vote_Finished')
+def vote_finished(data):
+    game_code = data['gameCode']
+    votes_for = data['votesFor']
+    role_data = data['roleData']
+    winning_team, winners, player_killed = api.get_winning_team_and_players(votes_for, role_data)
+    data = {
+        'winningTeam': winning_team,
+        'winners': winners,
+        'playerKilled': player_killed
+    }
+    print(data)
+    print('Calculated Results')
+    emit('Results_Calculated', data, room=game_code)
 
 
 # @socketio.on('disconnect')

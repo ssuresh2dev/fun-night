@@ -17,7 +17,7 @@ export default class RoleDescription extends Component {
     handleRoleAdded() {
         const role = this.props.role;
         const multipleSupportedRoles = ['Werewolf', 'Villager', 'Mason'];
-        if (this.state.selectedCount === 0 || multipleSupportedRoles.indexOf(role) > -1) {
+        if ((this.state.selectedCount === 0 || multipleSupportedRoles.indexOf(role) > -1) && !this.props.capacityFilled) {
             this.setState({
                 selectedCount: this.state.selectedCount + 1
             });
