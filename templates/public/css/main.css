@@ -44,6 +44,13 @@ hr {
   text-align: center;
 }
 
+.adjusted-small-label {
+  width: 90%;
+  font-family: Avenir, monospace;
+  font-size: 16px;
+  text-align: center;
+}
+
 .main-container-night {
   background-color: #003152;
   height: 100%;
@@ -241,6 +248,8 @@ hr {
 .larger-role-image {
   width: 85%;
   height: auto;
+  margin-left: 5px;
+  margin-top: 5px;
 }
 
 .role-description {

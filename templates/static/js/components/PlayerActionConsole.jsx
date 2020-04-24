@@ -146,7 +146,7 @@ export default class PlayerActionConsole extends Component {
                 <div className='role-card'>
                     <div className='role-left-panel'>
                         <img className='larger-role-image' src={utils.getImagePathForRole(assignedRole)}/>
-                        <label className='small-label'>{assignedRole}</label>
+                        <label className='adjusted-small-label'>{assignedRole}</label>
                     </div>
                     <div className='role-right-panel'>
                         <label className='larger-role-description'>{utils.getDescriptionForRole(assignedRole)}</label>

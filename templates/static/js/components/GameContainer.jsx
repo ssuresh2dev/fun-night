@@ -182,10 +182,16 @@ export default class GameContainer extends Component {
     // All Player Functions
 
     onPlayerSetUpdated(data) {
-        this.setState({
-            allPlayers: data['allPlayers'],
-            host: data['hostName'] === this.state.playerName
-        });
+        if ('hostName' in data) {
+            this.setState({
+                allPlayers: data['allPlayers'],
+                host: data['hostName'] === this.state.playerName
+            });
+        } else {
+            this.setState({
+                allPlayers: data['allPlayers']
+            });
+        }
     }
 
     onRoleAssignmentCompleted(data) {
@@ -437,7 +443,7 @@ export default class GameContainer extends Component {
                 <div className='centered-container'>
                     <div className='console vote-console'>
                         <label className='large-label'>Choose who to kill:</label>
-                        {this.state.allPlayers.map((player) => this.state.votedPlayer === '' ?
+                        {this.state.roleData['ordering'].map((player) => this.state.votedPlayer === '' ?
                             <button className='day-action-center-button' onClick={() => this.castVote(player)}>
                                 {player}
                             </button> :
