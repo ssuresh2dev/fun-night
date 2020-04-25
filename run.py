@@ -10,7 +10,7 @@ import eventlet
 eventlet.monkey_patch()
 
 log = logging.getLogger(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, logger=True, engineio_logger=True, cors_allowed_origins='*')
 
 
 @app.route('/')
@@ -210,4 +210,4 @@ def test_connect():
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, engineio_logger=True, logger=True, cors_allowed_origins='*')
+    socketio.run(app)
