@@ -28,7 +28,7 @@ def create_player(data):
     player_name = data['playerName']
     game_code = data['gameCode']
     print(f'Player {player_name} joined the game.')
-    emit('Player_Joined', {'playerName': player_name}, room=game_code)
+    emit('Player_Joined', {'playerName': player_name}, broadcast=True)
 
 
 @socketio.on('Update_Player_Set')
@@ -41,7 +41,7 @@ def update_player_set(data):
         'allPlayers': players,
         'hostName': host_name
     }
-    emit('Host_Updated_Player_Set', data, room=game_code)
+    emit('Host_Updated_Player_Set', data, broadcast=True)
 
 
 @socketio.on('Huddle_Finished')
