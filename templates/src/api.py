@@ -26,10 +26,10 @@ def create_initial_role_assignments(players, roles):
                 original_role_mapping[roles[i]] = players[i]
         else:
             center_roles.append(roles[i])
-    if 'Werewolf' in original_role_mapping and len(original_role_mapping['Werewolf']) > 0:
+    if len(original_role_mapping['Werewolf']) > 0:
         # Set one as the default in case no one chooses
         golden_wolf = original_role_mapping['Werewolf'][0]
-    if 'Dog Whisperer' in original_role_mapping and len(original_role_mapping['Werewolf']) < 2:
+    if original_role_mapping['Dog Whisperer'] != '' and len(original_role_mapping['Werewolf']) < 2:
         current_assignments[original_role_mapping['Dog Whisperer']] = 'Dog Whisperer -> Werewolf'
 
     random.shuffle(players)
