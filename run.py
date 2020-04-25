@@ -29,7 +29,7 @@ def create_player(data):
     player_name = data['playerName']
     game_code = data['gameCode']
     print(f'Player {player_name} joined the game.')
-    emit('Player_Joined', {'playerName': player_name}, room=game_code)
+    socketio.emit('Player_Joined', {'playerName': player_name}, room=game_code, include_self=True)
 
 
 @socketio.on('Update_Player_Set')
@@ -42,7 +42,7 @@ def update_player_set(data):
         'allPlayers': players,
         'hostName': host_name
     }
-    emit('Host_Updated_Player_Set', data, room=game_code)
+    socketio.emit('Host_Updated_Player_Set', data, room=game_code, include_self=True)
 
 
 @socketio.on('Huddle_Finished')
@@ -57,7 +57,7 @@ def assign_roles(data):
         'rolesInGame': roles_in_game
     }
     print(data)
-    emit('Assigned_Roles', data, room=game_code)
+    socketio.emit('Assigned_Roles', data, room=game_code, include_self=True)
 
 
 @socketio.on('Confirm_Player')
@@ -65,7 +65,7 @@ def confirm_player(data):
     game_code = data['gameCode']
     player_name = data['playerName']
     print(f'Player {player_name} confirmed role')
-    emit('Role_Confirmation_Count_Updated', room=game_code)
+    socketio.emit('Role_Confirmation_Count_Updated', room=game_code, include_self=True)
 
 
 @socketio.on('Confirmation_Finished')
@@ -77,7 +77,7 @@ def confirm_player(data):
     data = {
         'nextTurn': next_turn,
     }
-    emit('Begin_Player_Turn', data, room=game_code)
+    socketio.emit('Begin_Player_Turn', data, room=game_code, include_self=True)
 
 
 @socketio.on('Player_Turn_Finish')
@@ -91,9 +91,9 @@ def player_turn_finish(data):
         data = {
             'nextTurn': next_turn,
         }
-        emit('Begin_Player_Turn', data, room=game_code)
+        socketio.emit('Begin_Player_Turn', data, room=game_code, include_self=True)
     else:
-        emit('Night_Finished', room=game_code)
+        socketio.emit('Night_Finished', room=game_code, include_self=True)
 
 
 @socketio.on('Werewolf_Designated')
@@ -105,7 +105,7 @@ def werewolf_designated(data):
     data = {
         'roleData': role_data,
     }
-    emit('Role_Assignments_Updated', data, room=game_code)
+    socketio.emit('Role_Assignments_Updated', data, room=game_code, include_self=True)
 
 
 @socketio.on('Role_Switch')
@@ -118,7 +118,7 @@ def switch_roles(data):
     data = {
         'roleData': api.switch_roles(source, target, executing_role, role_data)
     }
-    emit('Role_Assignments_Updated', data, room=game_code)
+    socketio.emit('Role_Assignments_Updated', data, room=game_code, include_self=True)
 
 
 @socketio.on('Player_Ready_To_Vote')
@@ -126,7 +126,7 @@ def ready_to_vote(data):
     game_code = data['gameCode']
     player_name = data['player']
     print(f'Player {player_name} ready to vote')
-    emit('Ready_To_Vote_Count_Updated', room=game_code)
+    socketio.emit('Ready_To_Vote_Count_Updated', room=game_code, include_self=True)
 
 
 @socketio.on('Player_Voted')
@@ -137,7 +137,7 @@ def player_voted(data):
     data = {
         'voteFor': player_name
     }
-    emit('Vote_Updated', data, room=game_code)
+    socketio.emit('Vote_Updated', data, room=game_code, include_self=True)
 
 
 @socketio.on('Vote_Finished')
@@ -152,7 +152,7 @@ def vote_finished(data):
     }
     print(data)
     print('Calculated Results')
-    emit('Results_Calculated', data, room=game_code)
+    socketio.emit('Results_Calculated', data, room=game_code, include_self=True)
 
 
 @socketio.on('Player_Left')
@@ -168,7 +168,7 @@ def player_left(data):
     if host:
         data['hostName'] = random.sample(all_players, 1)
 
-    emit('Host_Updated_Player_Set', data, room=game_code)
+    socketio.emit('Host_Updated_Player_Set', data, room=game_code, include_self=True)
     leave_room(game_code)
 
 
@@ -180,7 +180,7 @@ def podcast_vote_requested(data):
     data = {
         'playerName': player_name
     }
-    emit('Podcast_Vote_Requested', data, room=game_code)
+    socketio.emit('Podcast_Vote_Requested', data, room=game_code, include_self=True)
 
 
 @socketio.on('Podcast_Vote')
@@ -191,7 +191,7 @@ def podcast_vote(data):
     data = {
         'vote': vote
     }
-    emit('Podcast_Votes_Updated', data, room=game_code)
+    socketio.emit('Podcast_Votes_Updated', data, room=game_code, include_self=True)
 
 
 # @socketio.on('disconnect')

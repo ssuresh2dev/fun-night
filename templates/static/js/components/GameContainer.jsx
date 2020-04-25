@@ -36,7 +36,7 @@ export default class GameContainer extends Component {
             winners: [],
             playersKilled: []
         };
-        this.socket = SocketIOClient('https://' + document.domain + ':' + location.port, {transports: ['websocket']});
+        this.socket = SocketIOClient('http://' + document.domain + ':' + location.port, {transports: ['websocket']});
         this.renderGetPlayerInfo = this.renderGetPlayerInfo.bind(this);
         this.renderPlayerHuddle = this.renderPlayerHuddle.bind(this);
         this.savePlayerInfo = this.savePlayerInfo.bind(this);
