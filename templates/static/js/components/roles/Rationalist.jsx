@@ -30,11 +30,7 @@ export default class Rationalist extends Component {
         );
     }
 
-    renderPostSelect() {
-        let player = this.props.selectedPlayer;
-        if (player === '') {
-            player = this.state.selectedPlayer;
-        }
+    renderPostSelect(player) {
         const role = this.props.roleData['currentAssignments'][player];
         return (
             <div className='action-container'>
@@ -45,10 +41,12 @@ export default class Rationalist extends Component {
     }
 
     render() {
-        if (this.state.selectedPlayer === '' && this.props.selectedPlayer !== '') {
-            return this.renderPreSelect();
+        if (this.props.selectedPlayer) {
+            return this.renderPostSelect(this.props.selectedPlayer);
+        } else if (this.state.selectedPlayer) {
+            return this.renderPostSelect(this.state.selectedPlayer);
         } else {
-            return this.renderPostSelect();
+            return this.renderPreSelect();
         }
     }
 };

@@ -171,6 +171,28 @@ def player_left(data):
     leave_room(game_code)
 
 
+@socketio.on('Player_Requested_Podcaster_Vote')
+def podcast_vote_requested(data):
+    game_code = data['gameCode']
+    player_name = data['player']
+    print(f'{player_name} requested Podcaster vote')
+    data = {
+        'playerName': player_name
+    }
+    emit('Podcast_Vote_Requested', data, room=game_code)
+
+
+@socketio.on('Podcast_Vote')
+def podcast_vote(data):
+    game_code = data['gameCode']
+    vote = data['vote']
+    print(f'Podcaster Vote: {vote}')
+    data = {
+        'vote': vote
+    }
+    emit('Podcast_Votes_Updated', data, room=game_code)
+
+
 # @socketio.on('disconnect')
 # def handle_player_left():
 #     player_name = sid_name_mapping[flask.request.sid]

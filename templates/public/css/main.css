@@ -298,6 +298,18 @@ hr {
   padding: 15px;
 }
 
+.podcast-request-container {
+  width: 100%;
+  height: 132px;
+  background-color: #dbdbdb;
+  border-radius: 5px;
+}
+
+.podcaster-player-action-center {
+  width: 100%;
+  height: 90px;
+}
+
 .player-action-center-button {
   width: 60%;
   height: 40px;
@@ -367,14 +379,21 @@ hr {
 }
 
 .expanded-role-image {
-  width: 120px;
+  width: 80px;
   height: auto;
   margin: 5px;
 }
 
-.available-roles-view {
+.available-roles-view-no-podcaster {
   width: 100%;
-  height: 240px;
+  height: 250px;
+  display: inline-block;
+  overflow-y: scroll;
+}
+
+.available-roles-view-with-podcaster {
+  width: 100%;
+  max-height: 180px;
   display: inline-block;
   overflow-y: scroll;
 }

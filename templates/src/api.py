@@ -44,7 +44,16 @@ def create_initial_role_assignments(players, roles):
 
 
 def get_next_turn_role(roles_in_game, previous_turn=None):
-    begin_index = constants.ORDERED_NIGHT_ROLES.index(previous_turn) + 1 if previous_turn else 0
+    if previous_turn in ['Agent of Chaos', 'Stoner', 'Robber', 'Troublemaker'] and 'Rationalist' in roles_in_game:
+        return 'Rationalist - ' + previous_turn
+    if not previous_turn:
+        begin_index = 0
+    elif 'Rationalist' in previous_turn:
+        prev_prev = previous_turn.split(' - ')[1]
+        begin_index = constants.ORDERED_NIGHT_ROLES.index(prev_prev) + 1
+    else:
+        begin_index = constants.ORDERED_NIGHT_ROLES.index(previous_turn) + 1
+
     for role in constants.ORDERED_NIGHT_ROLES[begin_index:]:
         if role in roles_in_game:
             return role

@@ -27,6 +27,9 @@ export default class GameContainer extends Component {
             playerConfirmedRole: false,
             numPlayersConfirmed: 0,
             executingTurn: '',
+            podcastRequester: '',
+            podcastVotes: [],
+            podcastRequestResult: '',
             playersReadyToVote: 0,
             votedPlayer: '',
             votesFor: [],
@@ -48,6 +51,8 @@ export default class GameContainer extends Component {
         this.onPlayerReadyToVote = this.onPlayerReadyToVote.bind(this);
         this.onLeaveGame = this.onLeaveGame.bind(this);
         this.dayFinished = this.dayFinished.bind(this);
+        this.onPlayerRequestedPodcasterVote = this.onPlayerRequestedPodcasterVote.bind(this);
+        this.onPodcastVote = this.onPodcastVote.bind(this);
     }
 
     componentDidMount() {
@@ -128,6 +133,33 @@ export default class GameContainer extends Component {
                 winners: data['winners'],
                 playersKilled: data['playersKilled']
             });
+        });
+
+        this.socket.on('Podcast_Vote_Requested', (data) => {
+            this.setState({
+                podcastRequester: data['playerName']
+            });
+        });
+
+        this.socket.on('Podcast_Votes_Updated', (data) => {
+            const voteResults = [...this.state.podcastVotes, data['vote']];
+            if (voteResults.length === this.state.allPlayers.length) {
+                let numFor = 0;
+                for (const result of voteResults.values()) {
+                    if (result === 'Approved') {
+                        numFor = numFor + 1;
+                    }
+                }
+                const votesNeeded = Math.floor(this.state.allPlayers.length / 2) + 1;
+                this.setState({
+                    podcastRequestResult: numFor >= votesNeeded ? 'Approved' : 'Rejected',
+                    podcastVotes: voteResults
+                })
+            } else {
+                this.setState({
+                    podcastVotes: voteResults
+                })
+            }
         });
 
         this.setState({
@@ -298,6 +330,13 @@ export default class GameContainer extends Component {
         });
     }
 
+    onPodcastVote(vote) {
+        this.socket.emit('Podcast_Vote', {
+            gameCode: this.state.gameCode,
+            vote: vote
+        });
+    }
+
     castVote(player) {
         this.socket.emit('Player_Voted', {
             gameCode: this.state.gameCode,
@@ -393,7 +432,7 @@ export default class GameContainer extends Component {
                 <div className='half-container'>
                     <PlayerActionConsole
                         role={assignedRole}
-                        executingTurn={this.state.executingTurn}
+                        executingTurn={utils.getRationalistDeformattedRole(this.state.executingTurn)}
                         allPlayers={this.state.allPlayers}
                         roleData={this.state.roleData}
                         rolesInGame={this.state.rolesInGame}
@@ -407,8 +446,15 @@ export default class GameContainer extends Component {
               <div className='half-container'>
                   <DayDashboard
                       rolesInGame={this.state.rolesInGame}
+                      roleData={this.state.roleData}
+                      allPlayers={this.state.allPlayers}
                       onReadyToVote={this.onPlayerReadyToVote}
-                      onLeaveGame={this.onLeaveGame}/>
+                      onLeaveGame={this.onLeaveGame}
+                      playerName={this.state.playerName}
+                      onPodcastRequest={this.onPlayerRequestedPodcasterVote}
+                      onPodcastVote={this.onPodcastVote}
+                      podcastRequester={this.state.podcastRequester}
+                      podcastRequestResult={this.state.podcastRequestResult}/>
               </div>
             );
         }
@@ -420,7 +466,7 @@ export default class GameContainer extends Component {
                 <div className='half-container'>
                     <PlayerCircle
                         countdownTime={15}
-                        executingTurn={this.state.executingTurn}
+                        executingTurn={utils.getRationalistDeformattedRole(this.state.executingTurn)}
                         onFinish={this.playerFinishedTurn}
                         gameState={'night'}/>
                 </div>

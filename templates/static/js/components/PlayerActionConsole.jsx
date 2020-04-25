@@ -59,11 +59,13 @@ export default class PlayerActionConsole extends Component {
         } else if (executingTurn === 'Rationalist') {
             if (this.state.rationalistPlayer !== '') {
                 return <Rationalist
+                            playerName={this.props.playerName}
                             roleData={this.props.roleData}
                             allPlayers={this.props.allPlayers}
                             selectedPlayer={this.state.rationalistPlayer}/>;
             } else {
                 return <Rationalist
+                            playerName={this.props.playerName}
                             roleData={this.props.roleData}
                             allPlayers={this.props.allPlayers}
                             onPlayerSelect={(player) => this.setState({rationalistPlayer: player})}/>;

@@ -14,6 +14,9 @@ export default class Inexplicable extends Component {
             roleSelection: '',
             roleActionPending: false
         };
+
+        this.handleCoinFlip = this.handleCoinFlip.bind(this);
+        this.handleRoleSelection = this.handleRoleSelection.bind(this);
     }
 
     handleCoinFlip() {
@@ -39,7 +42,7 @@ export default class Inexplicable extends Component {
             <div className='action-container'>
                 <label className='medium-label'>Flip a Coin:</label>
                 <div className='gap'>
-                    <button className='day-action-center-button' onClick={() => this.handleCoinFlip}>Flip</button>
+                    <button className='day-action-center-button' onClick={this.handleCoinFlip}>Flip</button>
                 </div>
             </div>
         );
@@ -56,10 +59,11 @@ export default class Inexplicable extends Component {
     renderRoleSelection() {
         const ineligibleRoles = ['Mason', 'Dog Whisperer', 'Devil\'s Advocate', 'Rationalist'];
         const eligibleRoles = this.props.rolesInGame.filter((role) => ineligibleRoles.indexOf(role) === -1);
+        const filtered = [...new Set(eligibleRoles)];
         return (
             <div className='action-container'>
                 <label className='medium-label'>Choose a new role:</label>
-                {eligibleRoles.map((name) =>
+                {filtered.map((name) =>
                     <button className='day-action-center-button' onClick={() => this.handleRoleSelection(name)}>{name}</button>)}
             </div>
         );

@@ -44,6 +44,14 @@ const getPlayerFinalRole = (player, roleData) => {
     }
 };
 
+const getRationalistDeformattedRole = (role) => {
+    if (role.includes('Rationalist')) {
+        return role.split(' - ')[0];
+    } else {
+        return role
+    }
+};
+
 const getNeighbors = (player, roleData) => {
     const ordering = roleData['ordering'];
     const pIndex = ordering.indexOf(player);
@@ -62,5 +70,6 @@ export default {
     getDisplayNameForRole,
     getPlayerOriginalRole,
     getPlayerFinalRole,
-    getNeighbors
+    getNeighbors,
+    getRationalistDeformattedRole
 };
