@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import queryString from 'query-string';
-import socketIOClient from "socket.io-client";
+import io from 'socket.io-client';
 import PlayerInfo from "./PlayerInfo";
 import PlayerHuddle from "./PlayerHuddle";
 import constants from '../constants';
@@ -36,7 +36,7 @@ export default class GameContainer extends Component {
             winners: [],
             playersKilled: []
         };
-        this.socket = socketIOClient('https://127.0.0.1:5000', {reconnect: true});
+        this.socket = io();
         this.renderGetPlayerInfo = this.renderGetPlayerInfo.bind(this);
         this.renderPlayerHuddle = this.renderPlayerHuddle.bind(this);
         this.savePlayerInfo = this.savePlayerInfo.bind(this);
