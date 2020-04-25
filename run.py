@@ -6,10 +6,11 @@ import random
 from templates import app
 from templates.src import api
 
+import eventlet
+eventlet.monkey_patch()
+
 log = logging.getLogger(__name__)
 socketio = SocketIO(app)
-
-# sid_name_mapping = {}
 
 
 @app.route('/')
@@ -28,7 +29,7 @@ def create_player(data):
     player_name = data['playerName']
     game_code = data['gameCode']
     print(f'Player {player_name} joined the game.')
-    emit('Player_Joined', {'playerName': player_name}, broadcast=True)
+    emit('Player_Joined', {'playerName': player_name}, room=game_code)
 
 
 @socketio.on('Update_Player_Set')
@@ -41,7 +42,7 @@ def update_player_set(data):
         'allPlayers': players,
         'hostName': host_name
     }
-    emit('Host_Updated_Player_Set', data, broadcast=True)
+    emit('Host_Updated_Player_Set', data, room=game_code)
 
 
 @socketio.on('Huddle_Finished')
