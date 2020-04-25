@@ -9,7 +9,7 @@ export default class PlayerCircle extends Component {
         this.renderDayContent = this.renderDayContent.bind(this);
     }
 
-    renderNightContent(value) {
+    renderNightContent({remainingTime}) {
         return (
             <div className='circle-content-container'>
                 <div className='circle-content'>
@@ -20,9 +20,9 @@ export default class PlayerCircle extends Component {
         );
     }
 
-    renderDayContent(value) {
-        const minutes = Math.floor(value / 60);
-        let seconds = value - (minutes * 60);
+    renderDayContent({remainingTime}) {
+        const minutes = Math.floor(remainingTime / 60);
+        let seconds = remainingTime - (minutes * 60);
         if (seconds < 10) {
             seconds = '0' + seconds;
         }
@@ -45,7 +45,7 @@ export default class PlayerCircle extends Component {
                     onComplete={this.props.onFinish}
                     size={400}
                     key={this.props.gameState === 'night' ? this.props.executingTurn: this.props.gameState}>
-                    {(value) => this.props.gameState === 'night' ? this.renderNightContent(value) : this.renderDayContent(value)}
+                    {this.props.gameState === 'night' ? this.renderNightContent : this.renderDayContent}
                 </CountdownCircleTimer>
             </div>
         );
