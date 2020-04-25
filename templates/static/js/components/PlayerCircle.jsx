@@ -40,12 +40,13 @@ export default class PlayerCircle extends Component {
             <div className='console player-circle-console'>
                 <CountdownCircleTimer
                     isPlaying={true}
-                    durationSeconds={this.props.countdownTime}
+                    duration={this.props.countdownTime}
                     colors={[["#EA6227", 0.33]]}
                     onComplete={this.props.onFinish}
                     size={400}
-                    renderTime={(value) => this.props.gameState === 'night' ? this.renderNightContent(value) : this.renderDayContent(value)}
-                    key={this.props.gameState === 'night' ? this.props.executingTurn: this.props.gameState}/>
+                    key={this.props.gameState === 'night' ? this.props.executingTurn: this.props.gameState}>
+                    {(value) => this.props.gameState === 'night' ? this.renderNightContent(value) : this.renderDayContent(value)}
+                </CountdownCircleTimer>
             </div>
         );
     }
