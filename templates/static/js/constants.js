@@ -86,7 +86,7 @@ const ROLE_METADATA = {
     },
     boynextdoor: {
         imageFilePath: 'boynextdoor.png',
-        description: 'Neither team. Wins if player to the left or right dies.'
+        description: 'Plays for themselves. Wins if player to the left or right dies.'
     },
     nutjob: {
         imageFilePath: 'nutjob.png',
