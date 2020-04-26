@@ -19,7 +19,7 @@ export default class DayDashboard extends Component {
     getPodcastRequestClaimStatus() {
         let didSeeReject = false;
         for (const player of this.props.allPlayers.values()) {
-            const playerClaimStatus = this.props.playerConfig[player]['podcastConfig']['claimStatus'];
+            const playerClaimStatus = this.props.playerConfigs[player]['podcastConfig']['claimStatus'];
             if (playerClaimStatus === 'Approved') {
                 return playerClaimStatus;
             } else if (playerClaimStatus === 'Claimed') {
@@ -32,9 +32,9 @@ export default class DayDashboard extends Component {
     }
 
     getVoteStatusForPlayer(player) {
-        if (this.props.playerConfig[player]['podcastConfig']['votesFor'].indexOf(this.props.playerName) > -1) {
+        if (this.props.playerConfigs[player]['podcastConfig']['votesFor'].indexOf(this.props.playerName) > -1) {
             return 'Approved';
-        } else if (this.props.playerConfig[player]['podcastConfig']['votesAgainst'].indexOf(this.props.playerName) > -1) {
+        } else if (this.props.playerConfigs[player]['podcastConfig']['votesAgainst'].indexOf(this.props.playerName) > -1) {
             return 'Rejected';
         }
         return '';
@@ -43,7 +43,7 @@ export default class DayDashboard extends Component {
     renderPodcastContent() {
         if (this.props.rolesInGame.indexOf('Podcaster') > -1) {
             const claimStatus = this.getPodcastRequestClaimStatus();
-            const playerClaimStatus = this.props.playerConfig[this.props.playerName]['podcastConfig']['claimStatus'];
+            const playerClaimStatus = this.props.playerConfigs[this.props.playerName]['podcastConfig']['claimStatus'];
             if (claimStatus === 'None' || (claimStatus === 'Rejected' && playerClaimStatus !== 'Rejected')) {
                 return (
                     <div className='podcast-request-container'>
@@ -96,7 +96,7 @@ export default class DayDashboard extends Component {
     render() {
         const sortedRoles = this.props.rolesInGame.sort();
         const podcasterInGame = this.props.rolesInGame.indexOf('Podcaster') > -1;
-        const isReadyToVote = this.props.playerConfig[this.props.playerName]['readyToVote'];
+        const isReadyToVote = this.props.playerConfigs[this.props.playerName]['readyToVote'];
         return (
             <div className='console day-dashboard-console'>
                 <label className='large-label'>Actions</label>

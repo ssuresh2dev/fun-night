@@ -56,22 +56,22 @@ def resync_data(data):
 
 @socketio.on('Update_Player_Set')
 def update_player_set(data):
-    player_config = data['playerConfig']
+    player_configs = data['playerConfigs']
     game_code = data['gameCode']
-    print(f'Host updated players to {list(player_config.keys())}')
+    print(f'Host updated players to {list(player_configs.keys())}')
     data = {
-        'playerConfig': player_config,
+        'playerConfigs': player_configs,
     }
     socketio.emit('Update_Player_Config', data, room=game_code, include_self=True)
 
 
 @socketio.on('Huddle_Finished')
 def assign_roles(data):
-    player_config = data['playerConfig']
+    player_configs = data['playerConfigs']
     game_code = data['gameCode']
     roles_in_game = data['rolesInGame']
     print(f'Beginning role assignment for game {game_code}')
-    role_data = api.create_initial_role_assignments(list(player_config.keys()), roles_in_game)
+    role_data = api.create_initial_role_assignments(list(player_configs.keys()), roles_in_game)
     data = {
         'roleData': role_data,
         'rolesInGame': roles_in_game
@@ -86,10 +86,11 @@ def confirm_player(data):
     player_name = data['playerName']
     player_config = data['playerConfig']
     copied = copy.deepcopy(player_config)
-    copied[player_name]['confirmedRole'] = True
+    copied['confirmedRole'] = True
     print(f'Player {player_name} confirmed role')
     data = {
-        'playerConfig': copied
+        'playerConfig': copied,
+        'playerName': player_name
     }
     socketio.emit('Update_Player_Config', data, room=game_code, include_self=True)
 
@@ -154,9 +155,10 @@ def ready_to_vote(data):
     player_config = data['playerConfig']
     print(f'Player {player_name} ready to vote')
     copied = copy.deepcopy(player_config)
-    copied[player_name]['readyToVote'] = True
+    copied['readyToVote'] = True
     data = {
-        'playerConfig': copied
+        'playerConfig': copied,
+        'playerName': player_name
     }
     socketio.emit('Update_Player_Config', data, room=game_code, include_self=True)
 
@@ -168,10 +170,11 @@ def player_voted(data):
     player_config = data['playerConfig']
     voted_against = data['votedAgainst']
     copied = copy.deepcopy(player_config)
-    copied[player_name]['votedAgainst'] = voted_against
+    copied['votedAgainst'] = voted_against
     print(f'Received vote for Player {voted_against}')
     data = {
-        'playerConfig': copied
+        'playerConfig': copied,
+        'playerName': player_name
     }
     socketio.emit('Update_Player_Config', data, room=game_code, include_self=True)
 
@@ -195,17 +198,13 @@ def vote_finished(data):
 def player_left(data):
     game_code = data['gameCode']
     player_name = data['playerName']
-    player_config = data['playerConfig']
-    copied = copy.deepcopy(player_config)
-    if player_name in copied:
-        del copied[player_name]
-
+    player_configs = data['playerConfigs']
     host = data['host']
     data = {
-        'playerConfig': copied
+        'playerName': player_name
     }
     if host:
-        data['hostName'] = random.sample(list(player_config.keys()), 1)
+        data['hostName'] = random.sample(list(player_configs.keys()), 1)
 
     socketio.emit('Update_Player_Config', data, room=game_code, include_self=True)
     leave_room(game_code)
@@ -217,9 +216,10 @@ def podcast_vote_requested(data):
     player_name = data['playerName']
     player_config = copy.deepcopy(data['playerConfig'])
     print(f'{player_name} requested Podcaster vote')
-    player_config[player_name]['podcasterConfig']['claimStatus'] = 'Claimed'
+    player_config['podcastConfig']['claimStatus'] = 'Claimed'
     data = {
-        'playerConfig': player_config
+        'playerConfig': player_config,
+        'playerName': player_name
     }
     socketio.emit('Update_Player_Config', data, room=game_code, include_self=True)
 
@@ -230,23 +230,24 @@ def podcast_vote(data):
     vote = data['vote']
     player_name = data['playerName']
     player_voted_on = data['playerVotedOn']
-    player_config = copy.deepcopy(data['playerConfig'])
+    player_voted_on_config = copy.deepcopy(data['playerVotedOnConfig'])
     print(f'Podcaster Vote: {vote}')
     if vote == 'Approved':
-        player_config[player_voted_on]['podcastConfig']['votesFor'].append(player_name)
+        player_voted_on_config['podcastConfig']['votesFor'].append(player_name)
     if vote == 'Approved':
-        player_config[player_voted_on]['podcastConfig']['votesAgainst'].append(player_name)
-    num_votes_for = len(player_config[player_voted_on]['podcastConfig']['votesFor'])
-    num_votes_against = len(player_config[player_voted_on]['podcastConfig']['votesAgainst'])
-    num_total = len(list(player_config.keys()))
+        player_voted_on_config['podcastConfig']['votesAgainst'].append(player_name)
+    num_votes_for = len(player_voted_on_config['podcastConfig']['votesFor'])
+    num_votes_against = len(player_voted_on_config['podcastConfig']['votesAgainst'])
+    num_total = len(list(player_voted_on_config.keys()))
     if num_votes_for + num_votes_against == num_total:
         if num_votes_for > (num_total // 2):
-            player_config[player_voted_on]['podcastConfig']['claimStatus'] = 'Approved'
+            player_voted_on_config['podcastConfig']['claimStatus'] = 'Approved'
         else:
-            player_config[player_voted_on]['podcastConfig']['claimStatus'] = 'Rejected'
+            player_voted_on_config['podcastConfig']['claimStatus'] = 'Rejected'
 
     data = {
-        'playerConfig': player_config
+        'playerConfig': player_voted_on_config,
+        'playerName': player_voted_on
     }
     socketio.emit('Update_Player_Config', data, room=game_code, include_self=True)
 
