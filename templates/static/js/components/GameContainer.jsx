@@ -114,6 +114,14 @@ export default class GameContainer extends Component {
             this.onResultsCalculated(data);
         });
 
+        // Clear unused cache keys
+        const allLocalStorageKeys = Object.keys(localStorage);
+        for (const k of allLocalStorageKeys.values()) {
+            if (k !== gameCode) {
+                localStorage.removeItem(k);
+            }
+        }
+
         const cachedStateString = localStorage.getItem(gameCode);
         if (cachedStateString) {
             const cachedState = JSON.parse(cachedStateString);
