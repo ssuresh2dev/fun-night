@@ -15,18 +15,37 @@ export default class PlayerCircle extends Component {
         const numPlayers = this.props.allPlayers.length;
         for (let i = 0; i < numPlayers; i++) {
             let degree = 360 / numPlayers * i;
-            let changeY = 260 - (Math.sin(degree * Math.PI / 180) * 260);
+            let changeY = 220 - (Math.sin(degree * Math.PI / 180) * 220);
             changeY = Math.round(changeY * 100) / 100;
-            let changeX = 260 - (Math.cos(degree * Math.PI / 180) * 260);
+            let changeX = 220 - (Math.cos(degree * Math.PI / 180) * 220);
             changeX = Math.round(changeX * 100) / 100;
 
             // Rotate by 90 degrees to be top-centric
             const tmp = changeX;
-            changeX = -1 * changeY;
+            changeX = (-1 * changeY);
             changeY = tmp;
-            if (changeX < 0) {
-                changeX += 520;
+            if (changeX <= 0) {
+                changeX += 440;
             }
+
+            changeX = changeX - 40;
+            changeY = changeY - 14;
+
+
+            // Adjust for height and width offsets
+            // if (changeX === 260) {
+            //     changeX = changeX - 40;
+            // } else if (changeX > 260) {
+            //     changeX = changeX - 80;
+            // }
+            //
+            // if (changeY === 260) {
+            //     changeX = changeX - 31;
+            // } else if (changeY > 260) {
+            //     changeY = changeY - 22;
+            // } else {
+            //     changeY = changeY + 40;
+            // }
 
             yCoords = [...yCoords, changeY];
             xCoords = [...xCoords, changeX];
@@ -66,11 +85,13 @@ export default class PlayerCircle extends Component {
         for (let i = 0; i < this.props.allPlayers.length; i++) {
             const style = {
                 container: {
-                    fontSize: '16px',
+                    fontSize: '18px',
                     fontFamily: 'Avenir, monospace',
-                    width: '50px',
+                    width: '80px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
                     position: 'absolute',
-                    left: (coordinates[0][i] - 25) + 'px',
+                    left: (coordinates[0][i]) + 'px',
                     top: coordinates[1][i] + 'px'
                 }
             };
@@ -92,11 +113,15 @@ export default class PlayerCircle extends Component {
                         duration={this.props.countdownTime}
                         colors={[["#EA6227", 0.33]]}
                         onComplete={this.props.onFinish}
-                        size={400}
+                        size={360}
                         key={this.props.gameState === 'night' ? this.props.executingTurn: this.props.gameState}>
                         {this.props.gameState === 'night' ? this.renderNightContent : this.renderDayContent}
                     </CountdownCircleTimer>
-                    {this.renderPlayerLabels()}
+                    <div className='player-label-circle-container'>
+                        <div className='player-label-circle'>
+                            {this.renderPlayerLabels()}
+                        </div>
+                    </div>
                 </div>
             </div>
         );
