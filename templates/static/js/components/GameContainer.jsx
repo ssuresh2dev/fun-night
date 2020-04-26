@@ -77,8 +77,6 @@ export default class GameContainer extends Component {
                         requestingPlayer: requestingPlayer
                     });
                 }
-            } else if (requestingPlayer !== this.state.playerName) {
-                this.savePlayerInfo(requestingPlayer);
             }
         });
 
@@ -122,6 +120,17 @@ export default class GameContainer extends Component {
             const localPlayerName = cachedState['playerName'];
             const localGameState = cachedState['gameState'];
             const localHost = host['host'];
+            let localPlayerConfig = {};
+            localPlayerConfig[localPlayerName] = {
+                confirmedRole: false,
+                readyToVote: false,
+                votedAgainst: '',
+                podcastConfig: {
+                    claimStatus: '',
+                    votesFor: [],
+                    votesAgainst: []
+                }
+            };
             this.socket.emit('Rejoin_Player', {
                 playerName: localPlayerName,
                 gameCode: gameCode,
@@ -131,6 +140,7 @@ export default class GameContainer extends Component {
                 gameCode: gameCode,
                 host: localHost,
                 gameState: localGameState,
+                playerConfigs: localPlayerConfig
             });
         }
 
