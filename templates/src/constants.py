@@ -1,29 +1,56 @@
-WEREWOLF = 'Werewolf'
-VILLAGER = 'Villager'
-MINION = 'Minion'
-ROBBER = 'Robber'
-TROUBLEMAKER = 'Troublemaker'
-SEER = 'Seer'
-INSOMNIAC = 'Insomniac'
-TANNER = 'Tanner'
-MASON = 'Mason'
-DOG_WHISPERER = 'Dog Whisperer'
-DEVILS_ADVOCATE = 'Devil\'s Advocate'
-STONER = 'Stoner'
-RATIONALIST = 'Rationalist'
+# Role names
 AGENT_OF_CHAOS = 'Agent of Chaos'
-INEXPLICABLE = 'Inexplicable'
 BOY_NEXTDOOR = 'Boy Nextdoor'
+DEVILS_ADVOCATE = 'Devil\'s Advocate'
+DOG_WHISPERER = 'Dog Whisperer'
+INEXPLICABLE = 'Inexplicable'
+INSOMNIAC = 'Insomniac'
+MASON = 'Mason'
+MINION = 'Minion'
 NUT_JOB = 'Nut Job'
 PODCASTER = 'Podcaster'
+RATIONALIST = 'Rationalist'
+ROBBER = 'Robber'
+SEER = 'Seer'
+STONER = 'Stoner'
+TANNER = 'Tanner'
+TROUBLEMAKER = 'Troublemaker'
+VILLAGER = 'Villager'
+WEREWOLF = 'Werewolf'
 
+# ALL_ROLES represents an array of all the possible roles that exist.
 ALL_ROLES = [
-    WEREWOLF, VILLAGER, MINION, ROBBER, TROUBLEMAKER, SEER, INSOMNIAC, TANNER, MASON,
-    DOG_WHISPERER, DEVILS_ADVOCATE, STONER, RATIONALIST, AGENT_OF_CHAOS, INEXPLICABLE,
-    BOY_NEXTDOOR, NUT_JOB, PODCASTER
+    AGENT_OF_CHAOS,
+    BOY_NEXTDOOR,
+    DEVILS_ADVOCATE,
+    DOG_WHISPERER,
+    INEXPLICABLE,
+    INSOMNIAC,
+    MASON,
+    MINION,
+    NUT_JOB,
+    PODCASTER,
+    RATIONALIST,
+    ROBBER,
+    SEER,
+    STONER,
+    TANNER,
+    TROUBLEMAKER,
+    VILLAGER,
+    WEREWOLF,
 ]
 
 ORDERED_NIGHT_ROLES = [
-    WEREWOLF, MINION, DEVILS_ADVOCATE, DOG_WHISPERER, MASON, SEER, AGENT_OF_CHAOS,
-    STONER, ROBBER, TROUBLEMAKER, INSOMNIAC, INEXPLICABLE
+    WEREWOLF,
+    MINION,
+    DEVILS_ADVOCATE,
+    DOG_WHISPERER,
+    MASON,
+    SEER,
+    AGENT_OF_CHAOS,
+    STONER,
+    ROBBER,
+    TROUBLEMAKER,
+    INSOMNIAC,
+    INEXPLICABLE
 ]

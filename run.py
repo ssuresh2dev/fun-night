@@ -68,6 +68,7 @@ def confirm_player(data):
     socketio.emit('Role_Confirmation_Count_Updated', room=game_code, include_self=True)
 
 
+# gets called when all players in the game have confirmed their roles
 @socketio.on('Confirmation_Finished')
 def confirm_player(data):
     game_code = data['gameCode']
@@ -80,6 +81,7 @@ def confirm_player(data):
     socketio.emit('Begin_Player_Turn', data, room=game_code, include_self=True)
 
 
+# gets called when the timer runs out for the current player's turn
 @socketio.on('Player_Turn_Finish')
 def player_turn_finish(data):
     game_code = data['gameCode']
