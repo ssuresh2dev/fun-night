@@ -1,122 +1,146 @@
-const WEREWOLF = 'Werewolf';
-const VILLAGER = 'Villager';
-const MINION = 'Minion';
-const ROBBER = 'Robber';
-const TROUBLEMAKER = 'Troublemaker';
-const SEER = 'Seer';
-const INSOMNIAC = 'Insomniac';
-const TANNER = 'Tanner';
-const MASON = 'Mason';
-const DOG_WHISPERER = 'Dog Whisperer';
-const DEVILS_ADVOCATE = 'Devil\'s Advocate';
-const STONER = 'Stoner';
-const RATIONALIST = 'Rationalist';
+// Role names
 const AGENT_OF_CHAOS = 'Agent of Chaos';
-const INEXPLICABLE = 'Inexplicable';
 const BOY_NEXTDOOR = 'Boy Nextdoor';
+const DEVILS_ADVOCATE = 'Devil\'s Advocate';
+const DOG_WHISPERER = 'Dog Whisperer';
+const INEXPLICABLE = 'Inexplicable';
+const INSOMNIAC = 'Insomniac';
+const MASON = 'Mason';
+const MINION = 'Minion';
 const NUT_JOB = 'Nut Job';
 const PODCASTER = 'Podcaster';
+const RATIONALIST = 'Rationalist';
+const ROBBER = 'Robber';
+const SEER = 'Seer';
+const STONER = 'Stoner';
+const TANNER = 'Tanner';
+const TROUBLEMAKER = 'Troublemaker';
+const VILLAGER = 'Villager';
+const WEREWOLF = 'Werewolf';
 
+// ALL_ROLES represents an array of all the possible roles that exist.
 const ALL_ROLES = [
-    WEREWOLF, VILLAGER, MINION, ROBBER, TROUBLEMAKER, SEER, INSOMNIAC, TANNER, MASON,
-    DOG_WHISPERER, DEVILS_ADVOCATE, STONER, RATIONALIST, AGENT_OF_CHAOS, INEXPLICABLE,
-    BOY_NEXTDOOR, NUT_JOB, PODCASTER
+    AGENT_OF_CHAOS,
+    BOY_NEXTDOOR,
+    DEVILS_ADVOCATE,
+    DOG_WHISPERER,
+    INEXPLICABLE,
+    INSOMNIAC,
+    MASON,
+    MINION,
+    NUT_JOB,
+    PODCASTER,
+    RATIONALIST,
+    ROBBER,
+    SEER,
+    STONER,
+    TANNER,
+    TROUBLEMAKER,
+    VILLAGER,
+    WEREWOLF,
 ];
 
+/*
+ *  ROLE_METADATA represents a dictionary of each possible role that exists to its metadata fields.
+ *  Available metadata:
+ *    - description: abridged description of the role
+ *    - imageFilePath: path to an image that depicts the role icon
+ */
 const ROLE_METADATA = {
-    werewolf: {
-        imageFilePath: 'werewolf.png',
-        description: 'Werewolf team. Looks for other werewolves, or at a center card if there are none.'
-    },
-    villager: {
-        imageFilePath: 'villager.png',
-        description: 'Village team. No special abilities.'
-    },
-    minion: {
-        imageFilePath: 'minion.png',
-        description: 'Werewolf team. Knows all werewolves. Wins if killed or if a village team role dies. If no werewolves, behaves as a werewolf instead.'
-    },
-    robber: {
-        imageFilePath: 'robber.png',
-        description: 'Village team. Switches cards with another player and takes on new role.'
-    },
-    seer: {
-        imageFilePath: 'seer.png',
-        description: 'Village team. Inspects any other player\'s card or two cards from the center.'
-    },
-    troublemaker: {
-        imageFilePath: 'troublemaker.png',
-        description: 'Village team. Switches cards between two other players, without looking.'
-    },
-    insomniac: {
-        imageFilePath: 'insomniac.png',
-        description: 'Village team. Observes own card at the end of the night, prior only to Inexplicable.'
-    },
-    tanner: {
-        imageFilePath: 'tanner.png',
-        description: 'Neither team. Wins if killed.'
-    },
-    mason: {
-        imageFilePath: 'mason.png',
-        description: 'Village team. Wakes up and looks for other masons.'
-    },
-    dogwhisperer: {
-        imageFilePath: 'dogwhisperer.png',
-        description: 'Village team. Knows one werewolf, but dies if that werewolf is killed. Is a werewolf if only one or no others.'
-    },
-    devilsadvocate: {
-        imageFilePath: 'devilsadvocate.png',
-        description: 'Village team. Knows all of the werewolves, but loses if voted against by all of them.'
-    },
-    stoner: {
-        imageFilePath: 'stoner.png',
-        description: 'Village team. Shuffles two other player\'s cards, then inspects only one before placing back.'
-    },
-    rationalist: {
-        imageFilePath: 'rationalist.png',
-        description: 'Village team. Inspects a single other player\'s card after every possible role-switch, except the Inexplicable.'
-    },
     agentofchaos: {
+        description: 'Switches cards with another player and takes their role. Agent of Chaos then joins opposite of new player\'s original team.',
         imageFilePath: 'agentofchaos.png',
-        description: 'Switches cards with another player and takes their role. Agent of Chaos then joins opposite of new player\'s original team.'
-    },
-    inexplicable: {
-        imageFilePath: 'inexplicable.png',
-        description: 'Village team. Flips a coin, and if heads, becomes any of most other roles and performs their action.'
     },
     boynextdoor: {
+        description: 'Plays for themselves. Wins if player to the left or right dies.',
         imageFilePath: 'boynextdoor.png',
-        description: 'Plays for themselves. Wins if player to the left or right dies.'
+    },
+    devilsadvocate: {
+        description: 'Village team. Knows all of the werewolves, but loses if voted against by all of them.',
+        imageFilePath: 'devilsadvocate.png',
+    },
+    dogwhisperer: {
+        description: 'Village team. Knows one werewolf, but dies if that werewolf is killed. Is a werewolf if only one or no others.',
+        imageFilePath: 'dogwhisperer.png',
+    },
+    inexplicable: {
+        description: 'Village team. Flips a coin, and if heads, becomes any of most other roles and performs their action.',
+        imageFilePath: 'inexplicable.png',
+    },
+    insomniac: {
+        description: 'Village team. Observes own card at the end of the night, prior only to Inexplicable.',
+        imageFilePath: 'insomniac.png',
+    },
+    mason: {
+        description: 'Village team. Wakes up and looks for other masons.',
+        imageFilePath: 'mason.png',
+    },
+    minion: {
+        description: 'Werewolf team. Knows all werewolves. Wins if killed or if a village team role dies. If no werewolves, behaves as a werewolf instead.',
+        imageFilePath: 'minion.png',
     },
     nutjob: {
+        description: 'Village team. Can make random guess of all werewolves before voting, but must reveal card first. Correct guess wins automatically.',
         imageFilePath: 'nutjob.png',
-        description: 'Village team. Can make random guess of all werewolves before voting, but must reveal card first. Correct guess wins automatically.'
     },
     podcaster: {
+        description: 'Village team. Can privately inspect any other player\'s card during the day, but with strict majority approval only.',
         imageFilePath: 'podcaster.png',
-        description: 'Village team. Can privately inspect any other player\'s card during the day, but with strict majority approval only.'
+    },
+    rationalist: {
+        description: 'Village team. Inspects a single other player\'s card after every possible role-switch, except the Inexplicable.',
+        imageFilePath: 'rationalist.png',
+    },
+    robber: {
+        description: 'Village team. Switches cards with another player and takes on new role.',
+        imageFilePath: 'robber.png',
+    },
+    seer: {
+        description: 'Village team. Inspects any other player\'s card or two cards from the center.',
+        imageFilePath: 'seer.png',
+    },
+    stoner: {
+        description: 'Village team. Shuffles two other player\'s cards, then inspects only one before placing back.',
+        imageFilePath: 'stoner.png',
+    },
+    tanner: {
+        description: 'Plays for themselves. Wins if killed.',
+        imageFilePath: 'tanner.png',
+    },
+    troublemaker: {
+        description: 'Village team. Switches cards between two other players, without looking.',
+        imageFilePath: 'troublemaker.png',
+    },
+    villager: {
+        description: 'Village team. No special abilities.',
+        imageFilePath: 'villager.png',
+    },
+    werewolf: {
+        description: 'Werewolf team. Looks for other werewolves, or at a center card if there are none.',
+        imageFilePath: 'werewolf.png',
     }
 };
 
 export default {
-    ALL_ROLES,
-    ROLE_METADATA,
-    WEREWOLF,
-    VILLAGER,
+    AGENT_OF_CHAOS,
+    BOY_NEXTDOOR,
+    DEVILS_ADVOCATE,
+    DOG_WHISPERER,
+    INEXPLICABLE,
+    INSOMNIAC,
+    MASON,
     MINION,
+    NUT_JOB,
+    PODCASTER,
+    RATIONALIST,
     ROBBER,
     SEER,
-    TROUBLEMAKER,
-    INSOMNIAC,
-    TANNER,
-    MASON,
-    DOG_WHISPERER,
-    DEVILS_ADVOCATE,
     STONER,
-    RATIONALIST,
-    AGENT_OF_CHAOS,
-    INEXPLICABLE,
-    BOY_NEXTDOOR,
-    NUT_JOB,
-    PODCASTER
+    TANNER,
+    TROUBLEMAKER,
+    VILLAGER,
+    WEREWOLF,
+
+    ALL_ROLES,
+    ROLE_METADATA,
 };
