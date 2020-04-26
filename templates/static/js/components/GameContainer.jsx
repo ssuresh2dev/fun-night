@@ -74,9 +74,11 @@ export default class GameContainer extends Component {
                         executingTurn: this.state.executingTurn,
                         winners: this.state.winners,
                         playersKilled: this.state.playersKilled,
-                        requestingPlayer: this.state.requestingPlayer
+                        requestingPlayer: requestingPlayer
                     });
                 }
+            } else if (requestingPlayer !== this.state.playerName) {
+                this.savePlayerInfo(requestingPlayer);
             }
         });
 
@@ -480,6 +482,9 @@ export default class GameContainer extends Component {
 
     renderRoleConfirmation() {
         if (this.state.gameState === 'roleassignment') {
+            if (Object.entries(this.state.roleData).length === 0) {
+                return null;
+            }
             const assignedRole = utils.getPlayerOriginalRole(this.state.playerName, this.state.roleData);
             return (
                 <div className='centered-container'>
@@ -493,6 +498,9 @@ export default class GameContainer extends Component {
 
     renderPlayerActionConsole() {
         if (this.state.gameState === 'night') {
+            if (Object.entries(this.state.roleData).length === 0) {
+                return null;
+            }
             const assignedRole = utils.getPlayerOriginalRole(this.state.playerName, this.state.roleData);
             return (
                 <div className='half-container'>
@@ -508,19 +516,22 @@ export default class GameContainer extends Component {
                 </div>
             );
         } else if (this.state.gameState === 'day') {
+            if (Object.entries(this.state.playerConfigs).length === 0) {
+                return null;
+            }
             return (
-              <div className='half-container'>
-                  <DayDashboard
-                      rolesInGame={this.state.rolesInGame}
-                      roleData={this.state.roleData}
-                      allPlayers={this.getAllPlayerNames()}
-                      onReadyToVote={this.onPlayerReadyToVote}
-                      onLeaveGame={this.onLeaveGame}
-                      playerName={this.state.playerName}
-                      playerConfigs={this.state.playerConfigs}
-                      onPodcastRequest={this.onPlayerRequestedPodcasterVote}
-                      onPodcastVote={this.onPodcastVote}/>
-              </div>
+                <div className='half-container'>
+                    <DayDashboard
+                        rolesInGame={this.state.rolesInGame}
+                        roleData={this.state.roleData}
+                        allPlayers={this.getAllPlayerNames()}
+                        onReadyToVote={this.onPlayerReadyToVote}
+                        onLeaveGame={this.onLeaveGame}
+                        playerName={this.state.playerName}
+                        playerConfigs={this.state.playerConfigs}
+                        onPodcastRequest={this.onPlayerRequestedPodcasterVote}
+                        onPodcastVote={this.onPodcastVote}/>
+                </div>
             );
         }
     }
@@ -550,6 +561,9 @@ export default class GameContainer extends Component {
 
     renderVote() {
         if (this.state.gameState === 'vote') {
+            if (Object.entries(this.state.playerConfigs).length === 0) {
+                return null;
+            }
             const votedAgainst = this.state.playerConfigs[this.state.playerName]['votedAgainst'];
             return (
                 <div className='centered-container'>
@@ -570,6 +584,9 @@ export default class GameContainer extends Component {
 
     renderEnd() {
         if (this.state.gameState === 'end') {
+            if (Object.entries(this.state.roleData).length === 0) {
+                return null;
+            }
             return (
                 <div className='centered-container'>
                     <EndDisplay
