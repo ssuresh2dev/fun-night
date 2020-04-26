@@ -16,5 +16,6 @@
 
 .DS_Store
 /node_modules/
-
+/templates/public/bundle.js
 __pycache__/
+
