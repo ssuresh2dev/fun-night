@@ -21,11 +21,10 @@ export default class GameContainer extends Component {
             gameState: 'createplayer',
             playerName: '',
             host: false,
-            playerConfig: {},
+            playerConfigs: {},
             rolesInGame: [],
             roleData: {},
             executingTurn: '',
-            podcastVoteSucceeded: false,
             winners: [],
             playersKilled: []
         };
@@ -69,11 +68,10 @@ export default class GameContainer extends Component {
                     this.socket.emit('Resync_Data', {
                         gameCode: this.state.gameCode,
                         gameState: this.state.gameState,
-                        playerConfig: this.state.playerConfig,
+                        playerConfigs: this.state.playerConfigs,
                         rolesInGame: this.state.rolesInGame,
                         roleData: this.state.roleData,
                         executingTurn: this.state.executingTurn,
-                        podcastVoteSucceeded: this.state.podcastVoteSucceeded,
                         winners: this.state.winners,
                         playersKilled: this.state.playersKilled,
                         requestingPlayer: this.state.requestingPlayer
@@ -86,11 +84,10 @@ export default class GameContainer extends Component {
            if (data['requestingPlayer'] === this.state.playerName) {
                this.setState({
                    gameState: data['gameState'],
-                   playerConfig: data['playerConfig'],
+                   playerConfigs: data['playerConfigs'],
                    rolesInGame: data['rolesInGame'],
                    roleData: data['roleData'],
                    executingTurn: data['executingTurn'],
-                   podcastVoteSucceeded: data['podcastVoteSucceeded'],
                    winners: data['winners'],
                    playersKilled: data['playersKilled']
                });
@@ -150,14 +147,14 @@ export default class GameContainer extends Component {
     }
 
     getAllPlayerNames() {
-        return Object.keys(this.state.playerConfig);
+        return Object.keys(this.state.playerConfigs);
     }
 
     // Host Specific Functions
 
     onPlayerJoined(data) {
         let updatedPlayerConfig = {};
-        Object.assign(updatedPlayerConfig, this.state.playerConfig)
+        Object.assign(updatedPlayerConfig, this.state.playerConfigs);
         updatedPlayerConfig[data['playerName']] = {
             confirmedRole: false,
             readyToVote: false,
@@ -169,11 +166,11 @@ export default class GameContainer extends Component {
             }
         };
         this.socket.emit('Update_Player_Set', {
-            playerConfig: updatedPlayerConfig,
+            playerConfigs: updatedPlayerConfig,
             gameCode: this.state.gameCode
         });
         this.setState({
-            playerConfig: updatedPlayerConfig
+            playerConfigs: updatedPlayerConfig
         });
     }
 
@@ -202,23 +199,36 @@ export default class GameContainer extends Component {
         this.socket.emit('Huddle_Finished', {
             gameCode: this.state.gameCode,
             rolesInGame: this.state.rolesInGame,
-            playerConfig: this.state.playerConfig
+            playerConfigs: this.state.playerConfigs
         });
     }
 
     // All Player Functions
 
     onPlayerSetUpdated(data) {
+        let updatedPlayerConfig = {};
+        Object.assign(updatedPlayerConfig, this.state.playerConfigs);
         if ('hostName' in data) {
+            // Someone left
+            delete updatedPlayerConfig[data['playerName']];
             this.setState({
-                playerConfig: data['playerConfig'],
+                playerConfigs: updatedPlayerConfig,
                 host: data['hostName'] === this.state.playerName
             }, () => {
                 this.updateLocalStorage();
             });
-        } else {
+        } else if ('playerConfigs' in data) {
+            // Update the entire player config state for all players
             this.setState({
-                playerConfig: data['playerConfig']
+                playerConfigs: data['playerConfigs']
+            }, () => {
+                this.updateGameStateIfNecessary();
+            });
+        } else {
+            // A single player was updated
+            updatedPlayerConfig[data['playerName']] = data['playerConfig'];
+            this.setState({
+                playerConfigs: updatedPlayerConfig
             }, () => {
                 this.updateGameStateIfNecessary();
             });
@@ -230,7 +240,7 @@ export default class GameContainer extends Component {
             let numConfirmations = 0;
             const allPlayers = this.getAllPlayerNames();
             for (const player of allPlayers.values()) {
-                if (this.state.playerConfig[player]['confirmedRole']) {
+                if (this.state.playerConfigs[player]['confirmedRole']) {
                     numConfirmations += 1;
                 }
             }
@@ -246,23 +256,21 @@ export default class GameContainer extends Component {
             let numReady = 0;
             const allPlayers = this.getAllPlayerNames();
             for (const player of allPlayers.values()) {
-                if (this.state.playerConfig[player]['readyToVote']) {
+                if (this.state.playerConfigs[player]['readyToVote']) {
                     numReady += 1;
                 }
             }
             if (numReady === allPlayers.length) {
-                if (this.state.host) {
-                    this.setState({
-                        gameState: 'vote',
-                    });
-                }
+                this.setState({
+                    gameState: 'vote',
+                });
             }
         } else if (this.state.gameState === 'vote') {
             let votesFor = [];
             const allPlayers = this.getAllPlayerNames();
             for (const player of allPlayers.values()) {
-                if (this.state.playerConfig[player]['votedAgainst'] !== '') {
-                    votesFor = [...votesFor, this.state.playerConfig[player]['votedAgainst']];
+                if (this.state.playerConfigs[player]['votedAgainst'] !== '') {
+                    votesFor = [...votesFor, this.state.playerConfigs[player]['votedAgainst']];
                 }
             }
             if (votesFor.length === allPlayers.length) {
@@ -337,7 +345,7 @@ export default class GameContainer extends Component {
         this.socket.emit('Confirm_Player', {
             gameCode: this.state.gameCode,
             playerName: this.state.playerName,
-            playerConfig: this.state.playerConfig
+            playerConfig: this.state.playerConfigs[this.state.playerName]
         });
     }
 
@@ -372,7 +380,7 @@ export default class GameContainer extends Component {
         this.socket.emit('Player_Ready_To_Vote', {
             gameCode: this.state.gameCode,
             player: this.state.playerName,
-            playerConfig: this.state.playerConfig
+            playerConfig: this.state.playerConfigs[this.state.playerName]
         });
     }
 
@@ -380,7 +388,7 @@ export default class GameContainer extends Component {
         this.socket.emit('Player_Requested_Podcaster_Vote', {
             gameCode: this.state.gameCode,
             playerName: this.state.playerName,
-            playerConfig: this.state.playerConfig
+            playerConfig: this.state.playerConfigs[this.state.playerName]
         });
     }
 
@@ -390,7 +398,7 @@ export default class GameContainer extends Component {
             vote: vote,
             playerName: this.state.playerName,
             playerVotedOn: player,
-            playerConfig: this.state.playerConfig
+            playerVotedOnConfig: this.state.playerConfigs[player]
         });
     }
 
@@ -399,7 +407,7 @@ export default class GameContainer extends Component {
             gameCode: this.state.gameCode,
             playerName: this.state.playerName,
             votedAgainst: player,
-            playerConfig: this.state.playerConfig
+            playerConfig: this.state.playerConfigs[this.state.playerName]
         });
     }
 
@@ -407,7 +415,7 @@ export default class GameContainer extends Component {
         this.socket.emit('Player_Left', {
             gameCode: this.state.gameCode,
             playerName: this.state.playerName,
-            playerConfig: this.state.playerConfig,
+            playerConfig: this.state.playerConfigs[this.state.playerName],
             host: this.state.host
         })
     }
@@ -509,7 +517,7 @@ export default class GameContainer extends Component {
                       onReadyToVote={this.onPlayerReadyToVote}
                       onLeaveGame={this.onLeaveGame}
                       playerName={this.state.playerName}
-                      playerConfig={this.state.playerConfig}
+                      playerConfigs={this.state.playerConfigs}
                       onPodcastRequest={this.onPlayerRequestedPodcasterVote}
                       onPodcastVote={this.onPodcastVote}/>
               </div>
@@ -542,7 +550,7 @@ export default class GameContainer extends Component {
 
     renderVote() {
         if (this.state.gameState === 'vote') {
-            const votedAgainst = this.state.playerConfig[this.state.playerName]['votedAgainst'];
+            const votedAgainst = this.state.playerConfigs[this.state.playerName]['votedAgainst'];
             return (
                 <div className='centered-container'>
                     <div className='console vote-console'>
