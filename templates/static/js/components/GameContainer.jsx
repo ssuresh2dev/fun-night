@@ -555,6 +555,9 @@ export default class GameContainer extends Component {
     }
 
     renderPlayerCircle() {
+        if (Object.entries(this.state.roleData).length === 0) {
+            return null;
+        }
         if (this.state.gameState === 'night') {
             return (
                 <div className='half-container'>
@@ -562,7 +565,8 @@ export default class GameContainer extends Component {
                         countdownTime={15}
                         executingTurn={utils.getRationalistDeformattedRole(this.state.executingTurn)}
                         onFinish={this.playerFinishedTurn}
-                        gameState={'night'}/>
+                        gameState={'night'}
+                        allPlayers={this.state.roleData['ordering']}/>
                 </div>
             );
         } else if (this.state.gameState === 'day') {
@@ -571,7 +575,8 @@ export default class GameContainer extends Component {
                     <PlayerCircle
                         countdownTime={420}
                         onFinish={this.dayFinished}
-                        gameState={'day'}/>
+                        gameState={'day'}
+                        allPlayers={this.state.roleData['ordering']}/>
                 </div>
             );
         }
