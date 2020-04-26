@@ -6,20 +6,8 @@ export default class DayDashboard extends Component {
 
     constructor(props) {
         super(props);
-        this.state = {
-            isReadyToVote: false,
-            podcastVote: ''
-        };
-        this.handleReadyToVote = this.handleReadyToVote.bind(this);
-        this.handleLeaveGame = this.handleLeaveGame.bind(this);
-        this.handlePodcastVote = this.handlePodcastVote.bind(this);
-    }
 
-    handleReadyToVote() {
-        this.props.onReadyToVote();
-        this.setState({
-            isReadyToVote: true
-        })
+        this.handleLeaveGame = this.handleLeaveGame.bind(this);
     }
 
     handleLeaveGame() {
@@ -27,44 +15,65 @@ export default class DayDashboard extends Component {
         window.location.href = '/';
     }
 
-    handlePodcastVote(vote) {
-        this.props.onPodcastVote(vote);
-        this.setState({
-            podcastVote: vote
-        });
+
+    getPodcastRequestClaimStatus() {
+        let didSeeReject = false;
+        for (const player of this.props.allPlayers.values()) {
+            const playerClaimStatus = this.props.playerConfig[player]['podcastConfig']['claimStatus'];
+            if (playerClaimStatus === 'Approved') {
+                return playerClaimStatus;
+            } else if (playerClaimStatus === 'Claimed') {
+                return player;
+            } else if (playerClaimStatus === 'Rejected') {
+                didSeeReject = true;
+            }
+        }
+        return didSeeReject ? 'Rejected' : 'None';
+    }
+
+    getVoteStatusForPlayer(player) {
+        if (this.props.playerConfig[player]['podcastConfig']['votesFor'].indexOf(this.props.playerName) > -1) {
+            return 'Approved';
+        } else if (this.props.playerConfig[player]['podcastConfig']['votesAgainst'].indexOf(this.props.playerName) > -1) {
+            return 'Rejected';
+        }
+        return '';
     }
 
     renderPodcastContent() {
         if (this.props.rolesInGame.indexOf('Podcaster') > -1) {
-            if (this.props.podcastRequester === '') {
+            const claimStatus = this.getPodcastRequestClaimStatus();
+            const playerClaimStatus = this.props.playerConfig[this.props.playerName]['podcastConfig']['claimStatus'];
+            if (claimStatus === 'None' || (claimStatus === 'Rejected' && playerClaimStatus !== 'Rejected')) {
                 return (
                     <div className='podcast-request-container'>
-                        <label className='small-label'>Podcaster Request: None</label>
+                        <label className='small-label'>Podcaster Request: {claimStatus}</label>
                         <div className='gap'>
                             <button className='day-action-center-button' onClick={this.props.onPodcastRequest}>Request Podcaster Vote</button>
                         </div>
                     </div>
                 );
-            } else if (this.props.podcastRequestResult === '') {
+            } else if (claimStatus !== 'Approved' && claimStatus !== 'Rejected') {
+                const voteStatus = this.getVoteStatusForPlayer(claimStatus);
                 return (
                     <div className='podcast-request-container'>
-                        <label className='small-label'>Podcaster Request: {this.props.podcastRequester}</label>
+                        <label className='small-label'>Podcaster Request: {claimStatus}</label>
                         <button
-                            className={this.state.podcastVote === 'Approved' ? 'day-action-center-button-selected' : 'day-action-center-button'}
-                            onClick={() => this.handlePodcastVote('Approved')}
-                            disabled={this.state.podcastVote !== ''}>Approve</button>
+                            className={voteStatus === 'Approved' ? 'day-action-center-button-selected' : 'day-action-center-button'}
+                            onClick={() => this.props.onPodcastVote('Approved', claimStatus)}
+                            disabled={voteStatus !== ''}>Approve</button>
                         <button
-                            className={this.state.podcastVote === 'Rejected' ? 'day-action-center-button-selected' : 'day-action-center-button'}
-                            onClick={() => this.handlePodcastVote('Rejected')}
-                            disabled={this.state.podcastVote !== ''}>Reject</button>
+                            className={voteStatus === 'Rejected' ? 'day-action-center-button-selected' : 'day-action-center-button'}
+                            onClick={() => this.props.onPodcastVote('Rejected', claimStatus)}
+                            disabled={voteStatus !== ''}>Reject</button>
                     </div>
                 );
-            } else if (this.props.playerName !== this.props.podcastRequester || this.props.podcastRequestResult === 'Rejected') {
+            } else if (playerClaimStatus === 'Rejected' || (claimStatus === 'Approved' && playerClaimStatus !== 'Approved')) {
                 return (
                     <div className='podcast-request-container'>
                         <label className='medium-label'>Podcast Vote Result:</label>
                         <div className='gap'>
-                            <label className='large-label'>{this.props.podcastRequestResult}</label>
+                            <label className='large-label'>{claimStatus}</label>
                         </div>
                     </div>
                 );
@@ -87,12 +96,13 @@ export default class DayDashboard extends Component {
     render() {
         const sortedRoles = this.props.rolesInGame.sort();
         const podcasterInGame = this.props.rolesInGame.indexOf('Podcaster') > -1;
+        const isReadyToVote = this.props.playerConfig[this.props.playerName]['readyToVote'];
         return (
             <div className='console day-dashboard-console'>
                 <label className='large-label'>Actions</label>
-                {this.state.isReadyToVote ?
+                {isReadyToVote ?
                     <button className='day-action-center-button-selected' disabled={true}> Ready to Vote</button> :
-                    <button className='day-action-center-button' onClick={this.handleReadyToVote}> Ready to Vote</button>}
+                    <button className='day-action-center-button' onClick={this.props.onReadyToVote}> Ready to Vote</button>}
                 <button className='day-action-center-button' onClick={this.handleLeaveGame}>Leave Game</button>
                 {this.renderPodcastContent()}
 

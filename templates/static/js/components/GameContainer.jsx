@@ -17,22 +17,15 @@ export default class GameContainer extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            playerName: '',
-            allPlayers: [],
             gameCode: '',
-            host: false,
             gameState: 'createplayer',
+            playerName: '',
+            host: false,
+            playerConfig: {},
             rolesInGame: [],
             roleData: {},
-            playerConfirmedRole: false,
-            numPlayersConfirmed: 0,
             executingTurn: '',
-            podcastRequester: '',
-            podcastVotes: [],
-            podcastRequestResult: '',
-            playersReadyToVote: 0,
-            votedPlayer: '',
-            votesFor: [],
+            podcastVoteSucceeded: false,
             winners: [],
             playersKilled: []
         };
@@ -67,100 +60,80 @@ export default class GameContainer extends Component {
             }
         });
 
-        this.socket.on('Player_Left', (data) => {
-            if (this.state.host) {
-                this.onPlayerLeft(data);
+        this.socket.on('Player_Requested_Rejoin', (data) => {
+            // Pick a player randomly to send back its data
+            const requestingPlayer = data['playerName'];
+            const eligibleResenders = this.getAllPlayerNames().filter((name) => name !== requestingPlayer);
+            if (eligibleResenders.length > 0) {
+                if (this.state.playerName === eligibleResenders[0]) {
+                    this.socket.emit('Resync_Data', {
+                        gameCode: this.state.gameCode,
+                        gameState: this.state.gameState,
+                        playerConfig: this.state.playerConfig,
+                        rolesInGame: this.state.rolesInGame,
+                        roleData: this.state.roleData,
+                        executingTurn: this.state.executingTurn,
+                        podcastVoteSucceeded: this.state.podcastVoteSucceeded,
+                        winners: this.state.winners,
+                        playersKilled: this.state.playersKilled,
+                        requestingPlayer: this.state.requestingPlayer
+                    });
+                }
             }
         });
 
-        this.socket.on('Host_Updated_Player_Set', (data) => {
+        this.socket.on('Resync_Data_Received', (data) => {
+           if (data['requestingPlayer'] === this.state.playerName) {
+               this.setState({
+                   gameState: data['gameState'],
+                   playerConfig: data['playerConfig'],
+                   rolesInGame: data['rolesInGame'],
+                   roleData: data['roleData'],
+                   executingTurn: data['executingTurn'],
+                   podcastVoteSucceeded: data['podcastVoteSucceeded'],
+                   winners: data['winners'],
+                   playersKilled: data['playersKilled']
+               });
+           }
+        });
+
+        this.socket.on('Update_Player_Config', (data) => {
             this.onPlayerSetUpdated(data);
         });
 
-        this.socket.on('Assigned_Roles', (data) => {
-           this.onRoleAssignmentCompleted(data);
-        });
-
-        this.socket.on('Role_Confirmation_Count_Updated', () => {
-            this.onRoleConfirmationCountUpdated();
+        this.socket.on('Update_Role_Assignments', (data) => {
+           this.onRoleAssignmentsUpdated(data);
         });
 
         this.socket.on('Begin_Player_Turn', (data) => {
             this.onBeginPlayerTurn(data);
         });
 
-        this.socket.on('Role_Assignments_Updated', (data) => {
-            this.onRoleAssignmentsUpdated(data);
-        });
-
         this.socket.on('Night_Finished', () => {
             this.onNightFinished();
         });
 
-        this.socket.on('Ready_To_Vote_Count_Updated', () => {
-            const playersReadyToVote = this.state.playersReadyToVote + 1;
-            if (playersReadyToVote === this.state.allPlayers.length) {
-                this.setState({
-                    gameState: 'vote',
-                    playersReadyToVote: playersReadyToVote
-                });
-            } else {
-                this.setState({
-                    playersReadyToVote: playersReadyToVote
-                });
-            }
-        });
-
-        this.socket.on('Vote_Updated', (data) => {
-            const votesFor = [...this.state.votesFor, data['voteFor']];
-            if (votesFor.length === this.state.allPlayers.length) {
-                if (this.state.host) {
-                    this.socket.emit('Vote_Finished', {
-                        gameCode: this.state.gameCode,
-                        votesFor: votesFor,
-                        roleData: this.state.roleData,
-                    });
-                }
-            }
-            this.setState({
-                votesFor: votesFor
-            });
-        });
-
         this.socket.on('Results_Calculated', (data) => {
-            this.setState({
-                gameState: 'end',
-                winners: data['winners'],
-                playersKilled: data['playersKilled']
-            });
+            this.onResultsCalculated(data);
         });
 
-        this.socket.on('Podcast_Vote_Requested', (data) => {
-            this.setState({
-                podcastRequester: data['playerName']
+        const cachedStateString = localStorage.getItem(gameCode);
+        if (cachedStateString) {
+            const cachedState = JSON.parse(cachedStateString);
+            const localPlayerName = cachedState['playerName'];
+            const localGameState = cachedState['gameState'];
+            const localHost = host['host'];
+            this.socket.emit('Rejoin_Player', {
+                playerName: localPlayerName,
+                gameCode: gameCode,
             });
-        });
-
-        this.socket.on('Podcast_Votes_Updated', (data) => {
-            const voteResults = [...this.state.podcastVotes, data['vote']];
-            if (voteResults.length === this.state.allPlayers.length) {
-                let numFor = 0;
-                for (const result of voteResults.values()) {
-                    if (result === 'Approved') {
-                        numFor = numFor + 1;
-                    }
-                }
-                const votesNeeded = Math.floor(this.state.allPlayers.length / 2) + 1;
-                this.setState({
-                    podcastRequestResult: numFor >= votesNeeded ? 'Approved' : 'Rejected',
-                    podcastVotes: voteResults
-                })
-            } else {
-                this.setState({
-                    podcastVotes: voteResults
-                })
-            }
-        });
+            this.setState({
+                playerName: localPlayerName,
+                gameCode: gameCode,
+                host: localHost,
+                gameState: localGameState,
+            });
+        }
 
         this.setState({
             gameCode: gameCode,
@@ -168,17 +141,39 @@ export default class GameContainer extends Component {
         })
     }
 
+    updateLocalStorage() {
+        localStorage.setItem(this.state.gameCode, JSON.stringify({
+            playerName: this.state.playerName,
+            host: this.state.host,
+            gameState: this.state.gameState
+        }));
+    }
+
+    getAllPlayerNames() {
+        return Object.keys(this.state.playerConfig);
+    }
+
     // Host Specific Functions
 
     onPlayerJoined(data) {
-        const newPlayers = [...this.state.allPlayers, data['playerName']];
+        let updatedPlayerConfig = {};
+        Object.assign(updatedPlayerConfig, this.state.playerConfig)
+        updatedPlayerConfig[data['playerName']] = {
+            confirmedRole: false,
+            readyToVote: false,
+            votedAgainst: '',
+            podcastConfig: {
+                claimStatus: '',
+                votesFor: [],
+                votesAgainst: []
+            }
+        };
         this.socket.emit('Update_Player_Set', {
-            players: newPlayers,
-            gameCode: this.state.gameCode,
-            hostName: this.state.playerName
+            playerConfig: updatedPlayerConfig,
+            gameCode: this.state.gameCode
         });
         this.setState({
-            allPlayers: newPlayers
+            playerConfig: updatedPlayerConfig
         });
     }
 
@@ -207,7 +202,7 @@ export default class GameContainer extends Component {
         this.socket.emit('Huddle_Finished', {
             gameCode: this.state.gameCode,
             rolesInGame: this.state.rolesInGame,
-            players: this.state.allPlayers
+            playerConfig: this.state.playerConfig
         });
     }
 
@@ -216,56 +211,113 @@ export default class GameContainer extends Component {
     onPlayerSetUpdated(data) {
         if ('hostName' in data) {
             this.setState({
-                allPlayers: data['allPlayers'],
+                playerConfig: data['playerConfig'],
                 host: data['hostName'] === this.state.playerName
+            }, () => {
+                this.updateLocalStorage();
             });
         } else {
             this.setState({
-                allPlayers: data['allPlayers']
+                playerConfig: data['playerConfig']
+            }, () => {
+                this.updateGameStateIfNecessary();
             });
         }
     }
 
-    onRoleAssignmentCompleted(data) {
-        this.setState({
-            roleData: data['roleData'],
-            rolesInGame: data['rolesInGame'],
-            gameState: 'roleassignment'
-        });
+    updateGameStateIfNecessary() {
+        if (this.state.gameState === 'roleassignment') {
+            let numConfirmations = 0;
+            const allPlayers = this.getAllPlayerNames();
+            for (const player of allPlayers.values()) {
+                if (this.state.playerConfig[player]['confirmedRole']) {
+                    numConfirmations += 1;
+                }
+            }
+            if (numConfirmations === allPlayers.length) {
+                if (this.state.host) {
+                    this.socket.emit('Confirmation_Finished', {
+                        gameCode: this.state.gameCode,
+                        rolesInGame: this.state.rolesInGame
+                    });
+                }
+            }
+        } else if (this.state.gameState === 'day') {
+            let numReady = 0;
+            const allPlayers = this.getAllPlayerNames();
+            for (const player of allPlayers.values()) {
+                if (this.state.playerConfig[player]['readyToVote']) {
+                    numReady += 1;
+                }
+            }
+            if (numReady === allPlayers.length) {
+                if (this.state.host) {
+                    this.setState({
+                        gameState: 'vote',
+                    });
+                }
+            }
+        } else if (this.state.gameState === 'vote') {
+            let votesFor = [];
+            const allPlayers = this.getAllPlayerNames();
+            for (const player of allPlayers.values()) {
+                if (this.state.playerConfig[player]['votedAgainst'] !== '') {
+                    votesFor = [...votesFor, this.state.playerConfig[player]['votedAgainst']];
+                }
+            }
+            if (votesFor.length === allPlayers.length) {
+                if (this.state.host) {
+                    this.socket.emit('Vote_Finished', {
+                        gameCode: this.state.gameCode,
+                        votesFor: votesFor,
+                        roleData: this.state.roleData,
+                    });
+                }
+            }
+        }
     }
 
     onRoleAssignmentsUpdated(data) {
-        this.setState({
-            roleData: data['roleData']
-        });
-    }
-
-    onRoleConfirmationCountUpdated() {
-        const confirmed = this.state.numPlayersConfirmed + 1;
-        if (confirmed === this.state.allPlayers.length) {
-            if (this.state.host) {
-                this.socket.emit('Confirmation_Finished', {
-                    gameCode: this.state.gameCode,
-                    rolesInGame: this.state.rolesInGame
-                });
-            }
+        if ('rolesInGame' in data) {
+            this.setState({
+                roleData: data['roleData'],
+                rolesInGame: data['rolesInGame'],
+                gameState: 'roleassignment'
+            }, () => {
+                this.updateLocalStorage();
+            });
+        } else {
+            this.setState({
+                roleData: data['roleData']
+            });
         }
-        this.setState({
-            numPlayersConfirmed: confirmed
-        });
     }
 
     onBeginPlayerTurn(data) {
         this.setState({
             executingTurn: data['nextTurn'],
             gameState: 'night'
+        }, () => {
+            this.updateLocalStorage();
         });
     }
 
     onNightFinished() {
         this.setState({
             gameState: 'day'
+        }, () => {
+            this.updateLocalStorage();
         })
+    }
+
+    onResultsCalculated(data) {
+        this.setState({
+            gameState: 'end',
+            winners: data['winners'],
+            playersKilled: data['playersKilled']
+        }, () => {
+            localStorage.removeItem(this.state.gameCode);
+        });
     }
 
     savePlayerInfo(playerName) {
@@ -276,17 +328,17 @@ export default class GameContainer extends Component {
         this.setState({
             playerName: playerName,
             gameState: 'huddle'
+        }, () => {
+            this.updateLocalStorage();
         });
     }
 
     playerConfirmedRole() {
         this.socket.emit('Confirm_Player', {
             gameCode: this.state.gameCode,
-            playerName: this.state.playerName
+            playerName: this.state.playerName,
+            playerConfig: this.state.playerConfig
         });
-        this.setState({
-            playerConfirmedRole: true
-        })
     }
 
     playerFinishedTurn() {
@@ -320,30 +372,34 @@ export default class GameContainer extends Component {
         this.socket.emit('Player_Ready_To_Vote', {
             gameCode: this.state.gameCode,
             player: this.state.playerName,
+            playerConfig: this.state.playerConfig
         });
     }
 
     onPlayerRequestedPodcasterVote() {
         this.socket.emit('Player_Requested_Podcaster_Vote', {
             gameCode: this.state.gameCode,
-            player: this.state.playerName,
+            playerName: this.state.playerName,
+            playerConfig: this.state.playerConfig
         });
     }
 
-    onPodcastVote(vote) {
+    onPodcastVote(vote, player) {
         this.socket.emit('Podcast_Vote', {
             gameCode: this.state.gameCode,
-            vote: vote
+            vote: vote,
+            playerName: this.state.playerName,
+            playerVotedOn: player,
+            playerConfig: this.state.playerConfig
         });
     }
 
     castVote(player) {
         this.socket.emit('Player_Voted', {
             gameCode: this.state.gameCode,
-            player: player
-        });
-        this.setState({
-            votedPlayer: player
+            playerName: this.state.playerName,
+            votedAgainst: player,
+            playerConfig: this.state.playerConfig
         });
     }
 
@@ -351,7 +407,7 @@ export default class GameContainer extends Component {
         this.socket.emit('Player_Left', {
             gameCode: this.state.gameCode,
             playerName: this.state.playerName,
-            allPlayers: this.state.allPlayers,
+            playerConfig: this.state.playerConfig,
             host: this.state.host
         })
     }
@@ -359,6 +415,8 @@ export default class GameContainer extends Component {
     dayFinished() {
         this.setState({
             gameState: 'vote'
+        }, () => {
+            this.updateLocalStorage();
         })
     }
 
@@ -382,7 +440,7 @@ export default class GameContainer extends Component {
             return (
                 <div className='half-container'>
                     <PlayerHuddle
-                        players={this.state.allPlayers}
+                        players={this.getAllPlayerNames()}
                         host={this.state.host}
                         onFinish={this.huddleFinished}
                         rolesInGame={this.state.rolesInGame}/>
@@ -403,7 +461,7 @@ export default class GameContainer extends Component {
                                     role={role}
                                     onRoleAdd={() => this.addRoleToGame(role)}
                                     onRoleRemove={() => this.removeRoleFromGame(role)}
-                                    capacityFilled={this.state.rolesInGame.length === this.state.allPlayers.length + 3}/>
+                                    capacityFilled={this.state.rolesInGame.length === this.getAllPlayerNames().length + 3}/>
                             )}
                         </div>
                     </div>
@@ -414,7 +472,7 @@ export default class GameContainer extends Component {
 
     renderRoleConfirmation() {
         if (this.state.gameState === 'roleassignment') {
-            const assignedRole = this.state.roleData['currentAssignments'][this.state.playerName];
+            const assignedRole = utils.getPlayerOriginalRole(this.state.playerName, this.state.roleData);
             return (
                 <div className='centered-container'>
                     <RoleConfirmation
@@ -433,7 +491,7 @@ export default class GameContainer extends Component {
                     <PlayerActionConsole
                         role={assignedRole}
                         executingTurn={utils.getRationalistDeformattedRole(this.state.executingTurn)}
-                        allPlayers={this.state.allPlayers}
+                        allPlayers={this.getAllPlayerNames()}
                         roleData={this.state.roleData}
                         rolesInGame={this.state.rolesInGame}
                         onRoleSwitch={this.onRoleSwitchTriggered}
@@ -447,14 +505,13 @@ export default class GameContainer extends Component {
                   <DayDashboard
                       rolesInGame={this.state.rolesInGame}
                       roleData={this.state.roleData}
-                      allPlayers={this.state.allPlayers}
+                      allPlayers={this.getAllPlayerNames()}
                       onReadyToVote={this.onPlayerReadyToVote}
                       onLeaveGame={this.onLeaveGame}
                       playerName={this.state.playerName}
+                      playerConfig={this.state.playerConfig}
                       onPodcastRequest={this.onPlayerRequestedPodcasterVote}
-                      onPodcastVote={this.onPodcastVote}
-                      podcastRequester={this.state.podcastRequester}
-                      podcastRequestResult={this.state.podcastRequestResult}/>
+                      onPodcastVote={this.onPodcastVote}/>
               </div>
             );
         }
@@ -485,15 +542,16 @@ export default class GameContainer extends Component {
 
     renderVote() {
         if (this.state.gameState === 'vote') {
+            const votedAgainst = this.state.playerConfig[this.state.playerName]['votedAgainst'];
             return (
                 <div className='centered-container'>
                     <div className='console vote-console'>
                         <label className='large-label'>Choose who to kill:</label>
-                        {this.state.roleData['ordering'].map((player) => this.state.votedPlayer === '' ?
+                        {this.state.roleData['ordering'].map((player) => votedAgainst === '' ?
                             <button className='day-action-center-button' onClick={() => this.castVote(player)}>
                                 {player}
                             </button> :
-                            <button className={this.state.votedPlayer === player ? 'day-action-center-button-selected' : 'day-action-center-button'} disabled={true}>
+                            <button className={votedAgainst === player ? 'day-action-center-button-selected' : 'day-action-center-button'} disabled={true}>
                                 {player}
                             </button>)}
                     </div>
