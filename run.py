@@ -3,6 +3,7 @@ import flask
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import random
 import copy
+from datetime import datetime
 
 from templates import app
 from templates.src import api
@@ -103,6 +104,7 @@ def confirm_player(data):
     print(f'Next Turn: {next_turn}')
     data = {
         'nextTurn': next_turn,
+        'timestamp': datetime.utcnow().strftime("%H:%M:%S")
     }
     socketio.emit('Begin_Player_Turn', data, room=game_code, include_self=True)
 
@@ -117,10 +119,14 @@ def player_turn_finish(data):
     if next_turn:
         data = {
             'nextTurn': next_turn,
+            'timestamp': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
         }
         socketio.emit('Begin_Player_Turn', data, room=game_code, include_self=True)
     else:
-        socketio.emit('Night_Finished', room=game_code, include_self=True)
+        data = {
+            'timestamp': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        socketio.emit('Night_Finished', data, room=game_code, include_self=True)
 
 
 @socketio.on('Werewolf_Designated')

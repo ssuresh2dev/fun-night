@@ -25,6 +25,7 @@ export default class GameContainer extends Component {
             rolesInGame: [],
             roleData: {},
             executingTurn: '',
+            countdownStart: '',
             winners: [],
             playersKilled: []
         };
@@ -72,6 +73,7 @@ export default class GameContainer extends Component {
                         rolesInGame: this.state.rolesInGame,
                         roleData: this.state.roleData,
                         executingTurn: this.state.executingTurn,
+                        countdownStart: this.state.countdownStart,
                         winners: this.state.winners,
                         playersKilled: this.state.playersKilled,
                         requestingPlayer: requestingPlayer
@@ -88,6 +90,7 @@ export default class GameContainer extends Component {
                    rolesInGame: data['rolesInGame'],
                    roleData: data['roleData'],
                    executingTurn: data['executingTurn'],
+                   countdownStart: data['countdownStart'],
                    winners: data['winners'],
                    playersKilled: data['playersKilled']
                });
@@ -106,8 +109,8 @@ export default class GameContainer extends Component {
             this.onBeginPlayerTurn(data);
         });
 
-        this.socket.on('Night_Finished', () => {
-            this.onNightFinished();
+        this.socket.on('Night_Finished', (data) => {
+            this.onNightFinished(data);
         });
 
         this.socket.on('Results_Calculated', (data) => {
@@ -298,7 +301,7 @@ export default class GameContainer extends Component {
                     this.socket.emit('Vote_Finished', {
                         gameCode: this.state.gameCode,
                         votesFor: votesFor,
-                        roleData: this.state.roleData,
+                        roleData: this.state.roleData
                     });
                 }
             }
@@ -324,15 +327,17 @@ export default class GameContainer extends Component {
     onBeginPlayerTurn(data) {
         this.setState({
             executingTurn: data['nextTurn'],
-            gameState: 'night'
+            gameState: 'night',
+            countdownStart: data['timestamp']
         }, () => {
             this.updateLocalStorage();
         });
     }
 
-    onNightFinished() {
+    onNightFinished(data) {
         this.setState({
-            gameState: 'day'
+            gameState: 'day',
+            countdownStart: data['timestamp']
         }, () => {
             this.updateLocalStorage();
         })
@@ -370,11 +375,13 @@ export default class GameContainer extends Component {
     }
 
     playerFinishedTurn() {
-        this.socket.emit('Player_Turn_Finish', {
-            gameCode: this.state.gameCode,
-            previousTurn: this.state.executingTurn,
-            rolesInGame: this.state.rolesInGame
-        });
+        if (this.state.host) {
+            this.socket.emit('Player_Turn_Finish', {
+                gameCode: this.state.gameCode,
+                previousTurn: this.state.executingTurn,
+                rolesInGame: this.state.rolesInGame
+            });
+        }
         return [false, 0];
     }
 
@@ -563,6 +570,7 @@ export default class GameContainer extends Component {
                 <div className='half-container'>
                     <PlayerCircle
                         countdownTime={15}
+                        countdownStart={this.state.countdownStart}
                         executingTurn={utils.getRationalistDeformattedRole(this.state.executingTurn)}
                         onFinish={this.playerFinishedTurn}
                         gameState={'night'}
@@ -574,6 +582,7 @@ export default class GameContainer extends Component {
                 <div className='half-container'>
                     <PlayerCircle
                         countdownTime={420}
+                        countdownStart={this.state.countdownStart}
                         onFinish={this.dayFinished}
                         gameState={'day'}
                         allPlayers={this.state.roleData['ordering']}/>
