@@ -300,7 +300,7 @@ export default class GameContainer extends Component {
                 if (this.state.host) {
                     this.socket.emit('Vote_Finished', {
                         gameCode: this.state.gameCode,
-                        votesFor: votesFor,
+                        playerConfigs: this.state.playerConfigs,
                         roleData: this.state.roleData
                     });
                 }

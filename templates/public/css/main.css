@@ -19,7 +19,8 @@ hr {
   position: absolute;
   bottom: 20px;
   left: 50%;
-  transform: translateX(-120px);
+  text-align: center;
+  transform: translateX(-50%);
 }
 
 .gap {
@@ -75,7 +76,8 @@ hr {
   height: 100%;
   margin: 0;
   padding: 40px;
-  display: flex;
+  display: block;
+  min-width: 600px;
   justify-content: center;
   align-items: center;
   transition: background 2s;

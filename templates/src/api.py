@@ -143,10 +143,26 @@ def get_team_affiliation_for_player(player, role_data):
         return raw_affiliation
 
 
-def get_winning_team_and_players(votes, role_data):
+def get_winning_team_and_players(player_configs, role_data):
+    votes = [player_configs[p]['votedAgainst'] for p in player_configs]
     highest_num_votes = max(set([votes.count(p) for p in votes]))
     players_with_highest_votes = [p for p in votes if votes.count(p) == highest_num_votes]
     players_with_highest_votes = list(set(players_with_highest_votes))
+
+    devils_advocate = ''
+    for p in role_data['ordering']:
+        if role_data['currentAssignments'][p] == 'Devil\'s Advocate':
+            devils_advocate = p
+
+    if devils_advocate != '':
+        did_get_non_dw_vote = False
+        for p in role_data['ordering']:
+            if 'Werewolf' in get_team_affiliation_for_player(p, role_data):
+                if player_configs[p]['votedAgainst'] != devils_advocate:
+                    did_get_non_dw_vote = True
+
+        if not did_get_non_dw_vote:
+            return [p for p in role_data['ordering'] if 'Werewolf' in get_team_affiliation_for_player(p, role_data)], [devils_advocate]
 
     affiliations = {}
     for vote in votes:

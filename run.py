@@ -188,9 +188,9 @@ def player_voted(data):
 @socketio.on('Vote_Finished')
 def vote_finished(data):
     game_code = data['gameCode']
-    votes_for = data['votesFor']
+    player_configs = data['playerConfigs']
     role_data = data['roleData']
-    winners, players_killed = api.get_winning_team_and_players(votes_for, role_data)
+    winners, players_killed = api.get_winning_team_and_players(player_configs, role_data)
     data = {
         'winners': winners,
         'playersKilled': players_killed
