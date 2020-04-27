@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {CountdownCircleTimer} from "react-countdown-circle-timer";
+import moment from 'moment';
 
 export default class PlayerCircle extends Component {
 
@@ -31,26 +32,16 @@ export default class PlayerCircle extends Component {
             changeX = changeX - 40;
             changeY = changeY - 14;
 
-
-            // Adjust for height and width offsets
-            // if (changeX === 260) {
-            //     changeX = changeX - 40;
-            // } else if (changeX > 260) {
-            //     changeX = changeX - 80;
-            // }
-            //
-            // if (changeY === 260) {
-            //     changeX = changeX - 31;
-            // } else if (changeY > 260) {
-            //     changeY = changeY - 22;
-            // } else {
-            //     changeY = changeY + 40;
-            // }
-
             yCoords = [...yCoords, changeY];
             xCoords = [...xCoords, changeX];
         }
         return [xCoords, yCoords];
+    }
+
+    getTimeSinceCountdownStart() {
+        const startTime = moment.utc(this.props.countdownStart, 'YYYY-MM-DD HH:mm:ss');
+        const currTime = moment.utc();
+        return currTime.diff(startTime, 'seconds');
     }
 
     renderNightContent({remainingTime}) {
@@ -111,6 +102,7 @@ export default class PlayerCircle extends Component {
                     <CountdownCircleTimer
                         isPlaying={true}
                         duration={this.props.countdownTime}
+                        initialRemainingTime={this.props.countdownTime - this.getTimeSinceCountdownStart()}
                         colors={[["#EA6227", 0.33]]}
                         onComplete={this.props.onFinish}
                         size={360}
