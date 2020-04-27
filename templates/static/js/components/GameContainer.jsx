@@ -634,6 +634,7 @@ export default class GameContainer extends Component {
     render() {
         return (
             <div className='main-container-night'>
+                <img className='logo' src='../../../public/images/logo.png'/>
                 {this.renderGetPlayerInfo()}
                 {this.renderPlayerHuddle()}
                 {this.renderRoleChoices()}
@@ -642,6 +643,7 @@ export default class GameContainer extends Component {
                 {this.renderPlayerActionConsole()}
                 {this.renderVote()}
                 {this.renderEnd()}
+                <label className='footer'>Designed with &hearts; by Sameer Suresh</label>
             </div>
         );
     }

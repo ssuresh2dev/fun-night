@@ -3,6 +3,25 @@ hr {
   margin-bottom: 5px;
 }
 
+.logo {
+  width: 220px;
+  height: auto;
+  position: absolute;
+  top: 30px;
+  left: 30px;
+}
+
+.footer {
+  width: 350px;
+  font-size: 16px;
+  font-family: Avenir, monospace;
+  color: white;
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-120px);
+}
+
 .gap {
   width: 100%;
   margin-top: 15px;
