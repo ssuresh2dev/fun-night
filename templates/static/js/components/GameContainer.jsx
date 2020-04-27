@@ -632,8 +632,23 @@ export default class GameContainer extends Component {
     }
 
     render() {
+        let style = {
+            container: {
+                backgroundColor: '#003152',
+                height: '100%',
+                margin: '0',
+                padding: '40px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                transition: 'background 2s'
+            }
+        };
+        if (this.state.gameState === 'day' || this.state.gameState === 'vote' || this.state.gameState === 'end') {
+            style['container']['backgroundColor'] = '#008ECC';
+        }
         return (
-            <div className='main-container-night'>
+            <div style={style.container}>
                 <img className='logo' src='../../../public/images/logo.png'/>
                 {this.renderGetPlayerInfo()}
                 {this.renderPlayerHuddle()}

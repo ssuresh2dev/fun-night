@@ -78,6 +78,7 @@ hr {
   display: flex;
   justify-content: center;
   align-items: center;
+  transition: background 2s;
 }
 
 .centered-container {
