@@ -631,12 +631,15 @@ export default class GameContainer extends Component {
             container: {
                 backgroundColor: '#003152',
                 height: '100%',
+                width: '100%',
                 margin: '0',
                 padding: '40px',
-                display: 'flex',
+                display: 'inline-block',
                 justifyContent: 'center',
                 alignItems: 'center',
-                transition: 'background 2s'
+                transition: 'background 2s',
+                overflowY: 'scroll',
+                textAlign: 'center'
             }
         };
         if (this.state.gameState === 'day' || this.state.gameState === 'vote' || this.state.gameState === 'end') {
