@@ -12,7 +12,7 @@ import eventlet
 eventlet.monkey_patch()
 
 log = logging.getLogger(__name__)
-socketio = SocketIO(app, logger=True, engineio_logger=True, cors_allowed_origins='*')
+socketio = SocketIO(app, logger=True, cors_allowed_origins='*')
 
 
 @app.route('/')
@@ -104,7 +104,6 @@ def confirm_player(data):
     print(f'Next Turn: {next_turn}')
     data = {
         'nextTurn': next_turn,
-        'timestamp': datetime.utcnow().strftime("%H:%M:%S")
     }
     socketio.emit('Begin_Player_Turn', data, room=game_code, include_self=True)
 
@@ -119,7 +118,6 @@ def player_turn_finish(data):
     if next_turn:
         data = {
             'nextTurn': next_turn,
-            'timestamp': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
         }
         socketio.emit('Begin_Player_Turn', data, room=game_code, include_self=True)
     else:

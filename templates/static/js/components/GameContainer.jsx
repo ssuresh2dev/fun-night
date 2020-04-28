@@ -268,12 +268,10 @@ export default class GameContainer extends Component {
                 }
             }
             if (numConfirmations === allPlayers.length) {
-                if (this.state.host) {
-                    this.socket.emit('Confirmation_Finished', {
-                        gameCode: this.state.gameCode,
-                        rolesInGame: this.state.rolesInGame
-                    });
-                }
+                this.socket.emit('Confirmation_Finished', {
+                    gameCode: this.state.gameCode,
+                    rolesInGame: this.state.rolesInGame
+                });
             }
         } else if (this.state.gameState === 'day') {
             let numReady = 0;
@@ -297,13 +295,11 @@ export default class GameContainer extends Component {
                 }
             }
             if (votesFor.length === allPlayers.length) {
-                if (this.state.host) {
-                    this.socket.emit('Vote_Finished', {
-                        gameCode: this.state.gameCode,
-                        playerConfigs: this.state.playerConfigs,
-                        roleData: this.state.roleData
-                    });
-                }
+                this.socket.emit('Vote_Finished', {
+                    gameCode: this.state.gameCode,
+                    playerConfigs: this.state.playerConfigs,
+                    roleData: this.state.roleData
+                });
             }
         }
     }
@@ -328,7 +324,6 @@ export default class GameContainer extends Component {
         this.setState({
             executingTurn: data['nextTurn'],
             gameState: 'night',
-            countdownStart: data['timestamp']
         }, () => {
             this.updateLocalStorage();
         });
@@ -375,13 +370,11 @@ export default class GameContainer extends Component {
     }
 
     playerFinishedTurn() {
-        if (this.state.host) {
-            this.socket.emit('Player_Turn_Finish', {
-                gameCode: this.state.gameCode,
-                previousTurn: this.state.executingTurn,
-                rolesInGame: this.state.rolesInGame
-            });
-        }
+        this.socket.emit('Player_Turn_Finish', {
+            gameCode: this.state.gameCode,
+            previousTurn: this.state.executingTurn,
+            rolesInGame: this.state.rolesInGame
+        });
         return [false, 0];
     }
 
@@ -569,8 +562,7 @@ export default class GameContainer extends Component {
             return (
                 <div className='half-container'>
                     <PlayerCircle
-                        countdownTime={15}
-                        countdownStart={this.state.countdownStart}
+                        countdownTime={18}
                         executingTurn={utils.getRationalistDeformattedRole(this.state.executingTurn)}
                         onFinish={this.playerFinishedTurn}
                         gameState={'night'}
@@ -578,6 +570,9 @@ export default class GameContainer extends Component {
                 </div>
             );
         } else if (this.state.gameState === 'day') {
+            if (this.state.countdownStart === '') {
+                return null;
+            }
             return (
                 <div className='half-container'>
                     <PlayerCircle

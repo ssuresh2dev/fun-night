@@ -8,6 +8,7 @@ export default class PlayerCircle extends Component {
         super(props);
         this.renderNightContent = this.renderNightContent.bind(this);
         this.renderDayContent = this.renderDayContent.bind(this);
+        this.getTimeSinceCountdownStart = this.getTimeSinceCountdownStart.bind(this);
     }
 
     getPlayerLabelCoordinates() {
@@ -96,13 +97,14 @@ export default class PlayerCircle extends Component {
     }
 
     render() {
+        const timeLeft = this.props.countdownStart ? this.props.countdownTime - this.getTimeSinceCountdownStart() : this.props.countdownTime;
         return (
             <div className='console player-circle-console'>
                 <div className='circle-with-names-container'>
                     <CountdownCircleTimer
                         isPlaying={true}
                         duration={this.props.countdownTime}
-                        initialRemainingTime={this.props.countdownTime - this.getTimeSinceCountdownStart()}
+                        initialRemainingTime={timeLeft}
                         colors={[["#EA6227", 0.33]]}
                         onComplete={this.props.onFinish}
                         size={360}
