@@ -144,44 +144,29 @@ def get_team_affiliation_for_player(player, role_data):
 
 
 def get_winning_team_and_players(player_configs, role_data):
-    votes = [player_configs[p]['votedAgainst'] for p in player_configs]
-    highest_num_votes = max(set([votes.count(p) for p in votes]))
-    players_with_highest_votes = [p for p in votes if votes.count(p) == highest_num_votes]
-    players_with_highest_votes = list(set(players_with_highest_votes))
-
-    devils_advocate = ''
-    for p in role_data['ordering']:
-        if role_data['currentAssignments'][p] == 'Devil\'s Advocate':
-            devils_advocate = p
-
-    if devils_advocate != '':
-        did_get_non_dw_vote = False
-        for p in role_data['ordering']:
-            if 'Werewolf' in get_team_affiliation_for_player(p, role_data):
-                if player_configs[p]['votedAgainst'] != devils_advocate:
-                    did_get_non_dw_vote = True
-
-        if not did_get_non_dw_vote:
-            return [p for p in role_data['ordering'] if 'Werewolf' in get_team_affiliation_for_player(p, role_data)], [devils_advocate]
-
-    affiliations = {}
-    for vote in votes:
-        aff = get_team_affiliation_for_player(vote, role_data)
-        if len(aff) > 8 and aff[:8] == 'Nextdoor':
-            key = aff.split(' - ')[0]
-        else:
-            key = aff
-        if key in affiliations:
-            affiliations[key] += 1
-        else:
-            affiliations[key] = 1
+    all_players = role_data['ordering']
+    votes = [player_configs[p]['votedAgainst'] for p in all_players]
+    highest_num_votes = max(set([votes.count(v) for v in votes]))
+    players_with_highest_votes = list(set([v for v in votes if votes.count(v) == highest_num_votes]))
+    all_werewolves = [p for p in all_players if 'Werewolf' in role_data['currentAssignments'][p]]
+    all_werewolf_or_minion = [p for p in all_players if 'Werewolf' in get_team_affiliation_for_player(p, role_data)]
+    all_villager_affiliated = [p for p in all_players if 'Village' in get_team_affiliation_for_player(p, role_data)]
 
     if highest_num_votes == 1:
+        werewolf_in_game = len(all_werewolves) > 0
         # No one was killed, circle vote. village wins if no werewolf, otherwise werewolf wins
-        if 'Werewolf' in affiliations:
-            return [p for p in role_data['ordering'] if 'Werewolf' in get_team_affiliation_for_player(p, role_data)], ['No One']
+        if werewolf_in_game:
+            print('Werewolves win by circle vote')
+            return all_werewolf_or_minion, ['No One']
         else:
-            return [p for p in role_data['ordering'] if 'Village' in get_team_affiliation_for_player(p, role_data)], ['No One']
+            print('Villagers win by circle vote')
+            return all_villager_affiliated, ['No One']
+
+    # If all the werewolves killed the Devil's Advocate the vote doesn't matter
+    werewolf_votes = list(set([player_configs[w]['votedAgainst'] for w in all_werewolves]))
+    if len(werewolf_votes) == 1 and role_data['currentAssignments'][werewolf_votes[0]] == 'Devil\'s Advocate':
+        print('Werewolves win by killing Devils Advocate')
+        return all_werewolf_or_minion, [werewolf_votes[0]]
 
     winners = []
     ineligible_winners = []
@@ -189,29 +174,38 @@ def get_winning_team_and_players(player_configs, role_data):
     for player in players_with_highest_votes:
         team = get_team_affiliation_for_player(player, role_data)
         if 'Tanner' in team:
+            print('Tanner wins')
             winners.append(player)
         if 'Boy Nextdoor' in team:
+            print('Boy Nextdoor neighbors win')
             neighbors = get_neighbors(player, role_data['ordering'])
             winners.extend(neighbors)
         if len(team) > 8 and team[:8] == 'Nextdoor':
             bn = team.split(' - ')[8:]
             winners.append(bn)
+            print(f'{get_neighbors(bn, role_data)} automatically lose as neighbors')
             ineligible_winners.append(get_neighbors(bn, role_data))
 
-    did_kill_werewolf = False
-    for player in players_with_highest_votes:
-        team = get_team_affiliation_for_player(player, role_data)
-        if team == 'Werewolf':
-            if 'Werewolf' in role_data['currentAssignments'][player]:
-                village_team = [p for p in role_data['ordering'] if 'Village' in get_team_affiliation_for_player(p, role_data)]
-                winners.extend([v for v in village_team if v not in ineligible_winners])
-                did_kill_werewolf = True
+    if len(players_with_highest_votes) == 1 and len(winners) > 0:
+        # There's no tie, only a special role won
+        print('Special role won with no tie!')
+        return winners, [players_with_highest_votes]
 
-    if not did_kill_werewolf:
-        werewolf_team = [p for p in role_data['ordering'] if 'Werewolf' in get_team_affiliation_for_player(p, role_data)]
-        winners.extend([v for v in werewolf_team if v not in ineligible_winners])
+    werewolves_killed = [w for w in all_werewolves if w in players_with_highest_votes]
+    if werewolves_killed:
+        # Dog Whisperer loses if the Golden Wolf was killed
+        for w in werewolves_killed:
+            if role_data['goldenWolf'] == w:
+                for p in all_players:
+                    if role_data['currentAssignments'][p] == 'Dog Whisperer':
+                        print('Dog Whisperer loses as golden wolf died')
+                        ineligible_winners.append(p)
+        print('Villagers win by werewolf kill')
+        winners.extend([v for v in all_villager_affiliated if v not in ineligible_winners])
+    else:
+        print('Werewolves win by no werewolf killed')
+        winners.extend([w for w in all_werewolf_or_minion if w not in ineligible_winners])
 
     winners = list(set(winners))
-
     return winners, players_with_highest_votes
 

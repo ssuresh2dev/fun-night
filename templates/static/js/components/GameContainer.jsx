@@ -40,7 +40,6 @@ export default class GameContainer extends Component {
         this.playerConfirmedRole = this.playerConfirmedRole.bind(this);
         this.playerFinishedTurn = this.playerFinishedTurn.bind(this);
         this.onRoleSwitchTriggered = this.onRoleSwitchTriggered.bind(this);
-        this.onWerewolfDesignated = this.onWerewolfDesignated.bind(this);
         this.onPlayerReadyToVote = this.onPlayerReadyToVote.bind(this);
         this.onLeaveGame = this.onLeaveGame.bind(this);
         this.dayFinished = this.dayFinished.bind(this);
@@ -388,14 +387,6 @@ export default class GameContainer extends Component {
         })
     }
 
-    onWerewolfDesignated(player) {
-        this.socket.emit('Werewolf_Designated', {
-            gameCode: this.state.gameCode,
-            player: player,
-            roleData: this.state.roleData
-        });
-    }
-
     onPlayerReadyToVote() {
         this.socket.emit('Player_Ready_To_Vote', {
             gameCode: this.state.gameCode,
@@ -529,7 +520,6 @@ export default class GameContainer extends Component {
                         roleData={this.state.roleData}
                         rolesInGame={this.state.rolesInGame}
                         onRoleSwitch={this.onRoleSwitchTriggered}
-                        onWerewolfDesignated={this.onWerewolfDesignated}
                         playerName={this.state.playerName}/>
                 </div>
             );

@@ -32,8 +32,7 @@ export default class PlayerActionConsole extends Component {
                         roleData={this.props.roleData}
                         rolesInGame={this.props.rolesInGame}
                         playerName={this.props.playerName}
-                        onWerewolfDesignated={this.props.onWerewolfDesignated}
-                        isGoldenWolf={false}/>;
+                        isGoldenWolfTurn={false}/>;
         } else if (executingTurn === 'Minion') {
             return <Minion roleData={this.props.roleData}/>;
         } else if (executingTurn === 'Devil\'s Advocate') {
@@ -44,8 +43,9 @@ export default class PlayerActionConsole extends Component {
             } else {
                 return <Werewolf
                             roleData={this.props.roleData}
+                            rolesInGame={this.props.rolesInGame}
                             playerName={this.props.playerName}
-                            isGoldenWolf={true}/>;
+                            isGoldenWolfTurn={true}/>;
             }
         } else if (executingTurn === 'Mason') {
             return <Mason
@@ -111,33 +111,13 @@ export default class PlayerActionConsole extends Component {
         const assignedRole = this.props.role;
         const executingTurn = this.props.executingTurn;
         const goldenWolf = this.props.roleData['goldenWolf'];
-        const boyNextdoorInGame = this.props.rolesInGame.indexOf('Boy Nextdoor') > -1;
         const renderAction = executingTurn === assignedRole || (executingTurn === 'Dog Whisperer' && goldenWolf === this.props.playerName);
 
-        if (renderAction) {
-            return (
-                <div className='player-action-center'>
-                    {this.getActionComponentForRole()}
-                </div>
-            );
-        } else if (boyNextdoorInGame) {
-            return (
-                <div className='player-action-center'>
-                    <label className='large-label'>Nothing to do yet!</label>
-                    <div className='gap'>
-                        <label className='medium-label'>Your Neighbors Are:</label>
-                        {utils.getNeighbors(this.props.playerName, this.props.roleData).map((name) =>
-                            <label className='large-label'>{name}</label>)}
-                    </div>
-                </div>
-            );
-        } else {
-            return (
-                <div className='player-action-center'>
-                    <label className='large-label'>Nothing to do yet!</label>
-                </div>
-            );
-        }
+        return (
+            <div className='player-action-center'>
+                {renderAction ? this.getActionComponentForRole() : <label className='large-label'>Nothing to do yet!</label>}
+            </div>
+        );
     }
 
     render() {

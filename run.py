@@ -127,18 +127,6 @@ def player_turn_finish(data):
         socketio.emit('Night_Finished', data, room=game_code, include_self=True)
 
 
-@socketio.on('Werewolf_Designated')
-def werewolf_designated(data):
-    game_code = data['gameCode']
-    player = data['player']
-    role_data = data['roleData']
-    role_data['goldenWolf'] = player
-    data = {
-        'roleData': role_data,
-    }
-    socketio.emit('Update_Role_Assignments', data, room=game_code, include_self=True)
-
-
 @socketio.on('Role_Switch')
 def switch_roles(data):
     game_code = data['gameCode']

@@ -23,8 +23,9 @@ export default class Werewolf extends Component {
         const allWerewolves = this.props.roleData['originalRoleMapping']['Werewolf'];
         const otherWerewolves = allWerewolves.filter((name) => name !== this.props.playerName);
         const dogWhispererInGame = this.props.rolesInGame.indexOf('Dog Whisperer') > -1;
+        const isAssignedGoldenWolf = dogWhispererInGame && this.props.playerName === this.props.roleData['goldenWolf'];
         const singleWerewolfDW = 'You must reveal yourself as the Golden Wolf to the Dog Whisperer';
-        const multiWerewolfDW = 'Choose one of yourselves to be revealed as the Golden Wolf to the Dog Whisperer';
+        const multiWerewolfDW = 'You are the Golden Wolf! You must reveal yourself to the Dog Whisperer when they wake up';
 
         if (otherWerewolves.length === 0) {
             return (
@@ -34,7 +35,7 @@ export default class Werewolf extends Component {
                     {this.state.revealedCenterCard === '' ?
                         <button className='day-action-center-button' onClick={this.onRevealCenterCard}>Reveal</button> :
                         <label className='large-label'>{this.state.revealedCenterCard}</label>}
-                    {dogWhispererInGame ? <label className='small-label'>{singleWerewolfDW}</label> : null}
+                    {isAssignedGoldenWolf ? <label className='small-label'>{singleWerewolfDW}</label> : null}
                 </div>
             );
         } else {
@@ -42,13 +43,7 @@ export default class Werewolf extends Component {
                 <div className='action-container'>
                     <label className='medium-label'>These are your fellow Werewolves:</label>
                     {otherWerewolves.map((name) => <label className='large-label'>{name}</label>)}
-                    {dogWhispererInGame ?
-                        <div className='gap'>
-                            <label className='small-label'>{multiWerewolfDW}</label>
-                            <button className='day-action-center-button' onClick={() => this.props.onWerewolfDesignated(this.props.playerName)}>
-                                I Was Chosen
-                            </button>
-                        </div> : null}
+                    {isAssignedGoldenWolf ? <label className='small-label'>{multiWerewolfDW}</label> : null}
                 </div>
             );
         }
@@ -74,7 +69,7 @@ export default class Werewolf extends Component {
     }
 
     render() {
-        if (this.props.isGoldenWolf) {
+        if (this.props.isGoldenWolfTurn) {
             return this.renderGoldenWolfTurn();
         } else {
             return this.renderWerewolfTurn();
