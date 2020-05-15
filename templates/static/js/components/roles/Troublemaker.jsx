@@ -19,7 +19,7 @@ export default class Troublemaker extends Component {
                 firstPlayer: player
             });
         } else {
-            this.props.onRoleSwitch(this.state.firstPlayer, this.state.secondPlayer);
+            this.props.onRoleSwitch(this.state.firstPlayer, player);
             this.setState({
                 secondPlayer: player,
                 didSwap: true

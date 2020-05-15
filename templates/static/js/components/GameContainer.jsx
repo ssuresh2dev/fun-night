@@ -637,7 +637,6 @@ export default class GameContainer extends Component {
         }
         return (
             <div style={style.container}>
-                <img className='logo' src='../../../public/images/logo.png'/>
                 {this.renderGetPlayerInfo()}
                 {this.renderPlayerHuddle()}
                 {this.renderRoleChoices()}

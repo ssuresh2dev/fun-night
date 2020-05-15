@@ -30,7 +30,6 @@ export default class Main extends Component {
     render() {
        return (
            <div className='main-container-night'>
-               <img className='logo' src='../../../public/images/logo.png'/>
                <div className='centered-container'>
                    <div className='console landing-page-console'>
                        <input className='large-input' type="text" ref="existingGameCode" placeholder='Game Code'/>

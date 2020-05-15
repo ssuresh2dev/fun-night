@@ -31,6 +31,8 @@ def create_initial_role_assignments(players, roles):
         golden_wolf = original_role_mapping['Werewolf'][0]
     if original_role_mapping['Dog Whisperer'] != '' and len(original_role_mapping['Werewolf']) < 2:
         current_assignments[original_role_mapping['Dog Whisperer']] = 'Dog Whisperer -> Werewolf'
+    if original_role_mapping['Devil\'s Advocate'] != '' and len(original_role_mapping['Werewolf']) == 0:
+        current_assignments[original_role_mapping['Devil\'s Advocate']] = 'Devil\'s Advocate -> Werewolf'
 
     random.shuffle(players)
 
@@ -66,7 +68,7 @@ def switch_roles(source_player, target_player, executor, role_data):
         aoc_player_role = new_data['currentAssignments'][aoc_player]
         swapped_player = target_player
         swapped_player_role = new_data['currentAssignments'][swapped_player]
-        if swapped_player_role in ['Werewolf', 'Minion', 'Dog Whisperer -> Werewolf']:
+        if swapped_player_role in ['Werewolf', 'Minion', 'Dog Whisperer -> Werewolf', 'Devil\'s Advocate -> Werewolf']:
             new_swapped_player_role = aoc_player_role + ' -> Villager'
         elif swapped_player_role in ['Tanner', 'Boy Nextdoor']:
             new_swapped_player_role = aoc_player_role + ' -> ' + swapped_player_role
@@ -192,7 +194,8 @@ def get_winning_team_and_players(player_configs, role_data):
         return winners, [players_with_highest_votes]
 
     werewolves_killed = [w for w in all_werewolves if w in players_with_highest_votes]
-    if werewolves_killed:
+    werewolves_or_minion_killed = [w for w in all_werewolf_or_minion if w in players_with_highest_votes]
+    if len(werewolves_killed) > 0 or (len(all_werewolves) == 0 and len(werewolves_or_minion_killed) > 0):
         # Dog Whisperer loses if the Golden Wolf was killed
         for w in werewolves_killed:
             if role_data['goldenWolf'] == w:
